@@ -4,6 +4,8 @@ import ActivityKit
 
 @objc(LiveActivityPlugin)
 public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
+    public static let sharedInstance = LiveActivityPlugin()
+
     public let identifier = "LiveActivityPlugin"
     public let jsName = "LiveActivity"
     public let pluginMethods: [CAPPluginMethod] = [
@@ -13,7 +15,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "isSupported", returnType: CAPPluginReturnPromise)
     ]
 
-    private var currentActivity: Any? = nil
+    private static var currentActivity: Any? = nil
 
     @objc func isSupported(_ call: CAPPluginCall) {
         if #available(iOS 16.1, *) {
@@ -68,7 +70,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            call.reject("Live Activities are disabled in iOS Settings for this app")
+            call.reject("Live Activities are disabled in iOS Settings for Overload")
             return
         }
 
@@ -76,7 +78,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         let initialState = extractContentState(from: call)
 
         do {
-            if let existing = currentActivity as? Activity<WorkoutActivityAttributes> {
+            if let existing = Self.currentActivity as? Activity<WorkoutActivityAttributes> {
                 Task {
                     await existing.end(dismissalPolicy: .immediate)
                 }
@@ -87,7 +89,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
                 contentState: initialState,
                 pushType: nil
             )
-            self.currentActivity = activity
+            Self.currentActivity = activity
             call.resolve([
                 "activityId": activity.id,
                 "status": "started"
@@ -103,7 +105,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
-        guard let activity = currentActivity as? Activity<WorkoutActivityAttributes> else {
+        guard let activity = Self.currentActivity as? Activity<WorkoutActivityAttributes> else {
             startActivity(call)
             return
         }
@@ -127,14 +129,86 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
-        if let activity = currentActivity as? Activity<WorkoutActivityAttributes> {
+        if let activity = Self.currentActivity as? Activity<WorkoutActivityAttributes> {
             Task {
                 await activity.end(dismissalPolicy: .immediate)
-                self.currentActivity = nil
+                Self.currentActivity = nil
                 call.resolve(["status": "ended"])
             }
         } else {
             call.resolve(["status": "no_active_activity"])
+        }
+    }
+
+    // Direct WebKit fallback handler
+    public func handleDirectMessage(_ data: [String: Any]) {
+        guard #available(iOS 16.1, *), ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+
+        let action = data["action"] as? String ?? "update"
+        if action == "end" {
+            if let activity = Self.currentActivity as? Activity<WorkoutActivityAttributes> {
+                Task {
+                    await activity.end(dismissalPolicy: .immediate)
+                    Self.currentActivity = nil
+                }
+            }
+            return
+        }
+
+        let split = data["splitName"] as? String ?? "PUSH"
+        let exerciseName = data["exerciseName"] as? String ?? "Smith Incline"
+        let setIndex = data["setIndex"] as? Int ?? 2
+        let totalSets = data["totalSets"] as? Int ?? 3
+        let loadText = data["loadText"] as? String ?? (data["weightText"] as? String ?? "115.0 LBS")
+        let targetReps = data["targetRepsText"] as? String ?? (data["repsText"] as? String ?? "8-12 Reps")
+        let isResting = data["isResting"] as? Bool ?? false
+        let restDuration = data["restDuration"] as? Double ?? 0
+        let isTriageLogging = data["isTriageLogging"] as? Bool ?? false
+        let underTarget = data["underTargetText"] as? String ?? "< 8 Missed"
+        let prescribed = data["prescribedTargetText"] as? String ?? "8-11 Target"
+        let overload = data["overloadTargetText"] as? String ?? "12+ Overload"
+        let increment = data["overloadIncrementText"] as? String ?? "+5 lbs Next"
+
+        var restEndTimestamp: TimeInterval? = nil
+        if isResting && restDuration > 0 {
+            restEndTimestamp = Date().addingTimeInterval(restDuration).timeIntervalSince1970
+        }
+
+        let contentState = WorkoutActivityAttributes.ContentState(
+            splitName: split,
+            exerciseName: exerciseName,
+            setIndex: setIndex,
+            totalSets: totalSets,
+            loadText: loadText,
+            targetRepsText: targetReps,
+            isResting: isResting,
+            restEndTimestamp: restEndTimestamp,
+            isTriageLogging: isTriageLogging,
+            underTargetText: underTarget,
+            prescribedTargetText: prescribed,
+            overloadTargetText: overload,
+            overloadIncrementText: increment
+        )
+
+        Task {
+            if let activity = Self.currentActivity as? Activity<WorkoutActivityAttributes> {
+                if #available(iOS 16.2, *) {
+                    await activity.update(ActivityContent(state: contentState, staleDate: nil))
+                } else {
+                    await activity.update(using: contentState)
+                }
+            } else {
+                do {
+                    let activity = try Activity<WorkoutActivityAttributes>.request(
+                        attributes: WorkoutActivityAttributes(),
+                        contentState: contentState,
+                        pushType: nil
+                    )
+                    Self.currentActivity = activity
+                } catch {
+                    print("Error starting Live Activity: \(error)")
+                }
+            }
         }
     }
 }

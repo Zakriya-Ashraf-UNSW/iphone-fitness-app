@@ -3547,28 +3547,35 @@
 
     function testDynamicIslandNow() {
       playTone(580);
-      if (!window.Capacitor) {
+      const hasCapPlugin = !!(window.Capacitor?.Plugins?.LiveActivity);
+      const hasWebKitBridge = !!(window.webkit?.messageHandlers?.liveActivity);
+
+      if (!window.Capacitor && !hasWebKitBridge) {
         showToast('Running in regular Web Browser. Open in Xcode app for Dynamic Island.');
         return;
       }
-      if (!window.Capacitor.Plugins || !window.Capacitor.Plugins.LiveActivity) {
-        showToast('⚠️ LiveActivity Plugin not detected in Capacitor. Pull latest repo & rebuild in Xcode.');
-        return;
-      }
-      window.Capacitor.Plugins.LiveActivity.isSupported().then(function(res) {
-        if (!res.supported) {
-          showToast('Live Activities require iOS 16.1+ device.');
-          return;
-        }
-        if (res.enabled === false) {
-          showToast('⚠️ Live Activities disabled in iOS Settings > Overload!');
-          return;
-        }
+
+      if (hasCapPlugin) {
+        window.Capacitor.Plugins.LiveActivity.isSupported().then(function(res) {
+          if (!res.supported) {
+            showToast('Live Activities require iOS 16.1+ device.');
+            return;
+          }
+          if (res.enabled === false) {
+            showToast('⚠️ Live Activities disabled in iOS Settings > Overload!');
+            return;
+          }
+          LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: 90 });
+          showToast('🚀 Dynamic Island Live Activity started! Swipe up to view Island.');
+        }).catch(function(err) {
+          showToast('LiveActivity Error: ' + (err.message || err));
+        });
+      } else if (hasWebKitBridge) {
         LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: 90 });
-        showToast('🚀 Dynamic Island Live Activity started! Swipe up to view Island.');
-      }).catch(function(err) {
-        showToast('LiveActivity Error: ' + (err.message || err));
-      });
+        showToast('🚀 Dynamic Island Live Activity started via Native Bridge! Swipe up to view.');
+      } else {
+        showToast('⚠️ LiveActivity Plugin not detected in Capacitor. Pull latest repo & rebuild in Xcode.');
+      }
     }
 
     const REST_LIMITS = {
