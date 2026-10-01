@@ -1689,6 +1689,9 @@
         </div>
       </div>
       <div class="header-actions">
+        <button id="btnTestIsland" class="btn" style="background:rgba(16, 185, 129, 0.15); border:1px solid #10b981; color:#6ee7b7; font-size:11px;" onclick="testDynamicIslandNow()" title="Test Dynamic Island Live Activity">
+          🏝️ Dynamic Island
+        </button>
         <button id="btnToggleAudio" class="btn" title="Sound Effects" onclick="toggleMute()">
           <span id="audioIcon">🔊</span>
         </button>
@@ -3541,6 +3544,32 @@
         } catch (e) {}
       }
     };
+
+    function testDynamicIslandNow() {
+      playTone(580);
+      if (!window.Capacitor) {
+        showToast('Running in regular Web Browser. Open in Xcode app for Dynamic Island.');
+        return;
+      }
+      if (!window.Capacitor.Plugins || !window.Capacitor.Plugins.LiveActivity) {
+        showToast('⚠️ LiveActivity Plugin not detected in Capacitor. Pull latest repo & rebuild in Xcode.');
+        return;
+      }
+      window.Capacitor.Plugins.LiveActivity.isSupported().then(function(res) {
+        if (!res.supported) {
+          showToast('Live Activities require iOS 16.1+ device.');
+          return;
+        }
+        if (res.enabled === false) {
+          showToast('⚠️ Live Activities disabled in iOS Settings > Overload!');
+          return;
+        }
+        LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: 90 });
+        showToast('🚀 Dynamic Island Live Activity started! Swipe up to view Island.');
+      }).catch(function(err) {
+        showToast('LiveActivity Error: ' + (err.message || err));
+      });
+    }
 
     const REST_LIMITS = {
       HEAVY_COMPOUND: { minSeconds: 120, defaultSeconds: 150, maxSeconds: 180 },
