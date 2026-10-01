@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# iOS build artifacts
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+DerivedData/
+.build/
+
+# OS files
+.DS_Store
+Thumbs.db
