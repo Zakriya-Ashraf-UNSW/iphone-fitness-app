@@ -13,6 +13,8 @@ class ViewController: CAPBridgeViewController, WKScriptMessageHandler {
         super.viewDidLoad()
         // Native WebKit message handler bridge fallback
         webView?.configuration.userContentController.add(self, name: "liveActivity")
+        // Edge-to-edge safe area handling with viewport-fit=cover
+        webView?.scrollView.contentInsetAdjustmentBehavior = .never
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
