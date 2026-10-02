@@ -78,7 +78,8 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         let initialState = extractContentState(from: call)
 
         do {
-            if let existing = Self.currentActivity as? Activity<WorkoutActivityAttributes> {
+            // End any previous/orphaned activities to prevent duplicates
+            for existing in Activity<WorkoutActivityAttributes>.activities {
                 Task {
                     await existing.end(dismissalPolicy: .immediate)
                 }
@@ -105,10 +106,14 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
-        guard let activity = Self.currentActivity as? Activity<WorkoutActivityAttributes> else {
+        // Use in-memory reference or adopt the active system Live Activity if app reloaded
+        let targetActivity = (Self.currentActivity as? Activity<WorkoutActivityAttributes>) ?? Activity<WorkoutActivityAttributes>.activities.first
+
+        guard let activity = targetActivity else {
             startActivity(call)
             return
         }
+        Self.currentActivity = activity
 
         let updatedState = extractContentState(from: call)
 
