@@ -626,6 +626,101 @@
       border-color: var(--brand-blue) !important;
     }
 
+    /* Dynamic Island Consistent Triage Set Logging UI (Full-Sized) */
+    .triage-section-header {
+      font-size: 11px;
+      font-weight: 800;
+      font-family: SF Mono, SFMono-Regular, ui-monospace, monospace;
+      color: rgba(255, 255, 255, 0.65);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin: 12px 0 10px 0;
+      text-align: center;
+    }
+    .triage-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .triage-card {
+      padding: 14px 6px;
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      outline: none;
+      position: relative;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .triage-card:active {
+      transform: scale(0.95);
+    }
+    .triage-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 15px;
+      font-weight: 800;
+      font-family: var(--font-rounded, system-ui, -apple-system, sans-serif);
+      line-height: 1.2;
+    }
+    .triage-card-bottom {
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    /* Red / Under Target Card */
+    .triage-card-red {
+      background: linear-gradient(180deg, rgba(64, 15, 26, 0.85) 0%, rgba(40, 8, 16, 0.95) 100%);
+      border: 1.5px solid rgba(244, 63, 94, 0.7);
+      box-shadow: 0 4px 14px rgba(244, 63, 94, 0.12);
+    }
+    .triage-card-red .triage-card-top { color: #fda4af; }
+    .triage-card-red .triage-card-bottom { color: #f43f5e; }
+    .triage-card-red:hover, .triage-card-red.active-triage {
+      background: linear-gradient(180deg, rgba(88, 20, 36, 0.95) 0%, rgba(64, 15, 26, 0.98) 100%);
+      border-color: #f43f5e;
+      box-shadow: 0 0 18px rgba(244, 63, 94, 0.45);
+    }
+
+    /* Blue / Prescribed Target Card */
+    .triage-card-blue {
+      background: linear-gradient(180deg, rgba(13, 46, 71, 0.85) 0%, rgba(8, 28, 45, 0.95) 100%);
+      border: 1.5px solid rgba(56, 189, 248, 0.7);
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.12);
+    }
+    .triage-card-blue .triage-card-top { color: #7dd3fc; }
+    .triage-card-blue .triage-card-bottom { color: #38bdf8; }
+    .triage-card-blue:hover, .triage-card-blue.active-triage {
+      background: linear-gradient(180deg, rgba(18, 64, 98, 0.95) 0%, rgba(13, 46, 71, 0.98) 100%);
+      border-color: #38bdf8;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.45);
+    }
+
+    /* Green / Overload Card */
+    .triage-card-green {
+      background: linear-gradient(180deg, rgba(10, 56, 36, 0.85) 0%, rgba(6, 34, 22, 0.95) 100%);
+      border: 1.5px solid rgba(16, 185, 129, 0.7);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.12);
+    }
+    .triage-card-green .triage-card-top { color: #6ee7b7; }
+    .triage-card-green .triage-card-bottom { color: #10b981; }
+    .triage-card-green:hover, .triage-card-green.active-triage {
+      background: linear-gradient(180deg, rgba(14, 78, 50, 0.95) 0%, rgba(10, 56, 36, 0.98) 100%);
+      border-color: #10b981;
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.45);
+    }
+
     .history-context-pill {
       font-size: 10px;
       font-weight: 700;
@@ -741,6 +836,73 @@
       font-size: 12px;
     }
     .recap-item:last-child { border-bottom: none; }
+
+    /* EXERCISE RECAP CARD */
+    .exercise-recap-card {
+      background: #0f172a;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(16, 185, 129, 0.1);
+    }
+    .recap-outcome-banner {
+      border-radius: 12px;
+      padding: 12px 14px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+    }
+    .banner-green {
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid #10b981;
+      color: #34d399;
+    }
+    .banner-cyan {
+      background: rgba(56, 189, 248, 0.18);
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+    }
+    .banner-amber {
+      background: rgba(245, 158, 11, 0.18);
+      border: 1px solid #f59e0b;
+      color: #fbbf24;
+    }
+    .recap-sets-grid {
+      display: flex;
+      gap: 8px;
+    }
+    .recap-set-item {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .recap-set-item .set-lbl {
+      font-size: 10px;
+      font-weight: 800;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+    .recap-set-item .set-val {
+      font-size: 13px;
+      font-weight: 900;
+      color: #f8fafc;
+    }
+    .overload-delta-box {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px dashed rgba(16, 185, 129, 0.5);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
     /* WORKOUT HISTORY TAB */
     .history-container {
@@ -1875,13 +2037,30 @@
             </div>
           </div>
 
-          <p class="question-prompt">Hit 12 reps on Set 1?</p>
-          <div class="btn-grid-2">
+          <!-- CHAMBER 1 SET LOGGING TRIAGE (FULL-SIZED DYNAMIC ISLAND MATCH) -->
+          <p class="triage-section-header">HOW DID THE SET GO? (ONE-TAP LOG)</p>
+          <div class="triage-cards-grid">
+            <button id="c1_triageUnder" class="triage-card triage-card-red" onclick="handleChamberS1Triage('missed')">
+              <div class="triage-card-top"><span>▼</span> <span id="c1_underTargetReps">&lt; 8</span></div>
+              <div class="triage-card-bottom">Under Target</div>
+            </button>
+            <button id="c1_triageTarget" class="triage-card triage-card-blue" onclick="handleChamberS1Triage('target')">
+              <div class="triage-card-top"><span>🎯</span> <span id="c1_prescribedTargetReps">8–11</span></div>
+              <div class="triage-card-bottom">Prescribed Reps</div>
+            </button>
+            <button id="c1_triageOverload" class="triage-card triage-card-green" onclick="handleChamberS1Triage('overload')">
+              <div class="triage-card-top"><span>🚀</span> <span id="c1_overloadTargetReps">12+</span></div>
+              <div id="c1_overloadSubtext" class="triage-card-bottom">+2.5kg Next</div>
+            </button>
+          </div>
+
+          <!-- Hidden legacy buttons kept for backward compatibility with scripts -->
+          <div class="btn-grid-2 hidden" style="display:none;">
             <button id="c1_btnNo" class="choice-btn" onclick="handleChamberS1Answer('NO')">✕ NO (under 12)</button>
             <button id="c1_btnYes" class="choice-btn" onclick="handleChamberS1Answer('YES')">✓ YES (12 reps)</button>
           </div>
 
-          <!-- Follow-up question if 12 reps -->
+          <!-- Follow-up question if needed -->
           <div id="c1_followup" class="sub-branch-box hidden">
             <div style="display: flex; align-items: center; justify-content: space-between;">
               <p class="question-prompt" style="font-size:12px; color:#fcd34d;">Did you hit 12 reps last session too?</p>
@@ -1914,8 +2093,25 @@
             <span id="c2_weightBadge" class="chamber-weight-badge">185 lbs</span>
           </div>
 
-          <p class="question-prompt">Hit 12 reps on Set 2?</p>
-          <div class="btn-grid-2">
+          <!-- CHAMBER 2 SET LOGGING TRIAGE (FULL-SIZED DYNAMIC ISLAND MATCH) -->
+          <p class="triage-section-header">HOW DID THE SET GO? (ONE-TAP LOG)</p>
+          <div class="triage-cards-grid">
+            <button id="c2_triageUnder" class="triage-card triage-card-red" onclick="handleChamberS2Triage('missed')">
+              <div class="triage-card-top"><span>▼</span> <span id="c2_underTargetReps">&lt; 8</span></div>
+              <div class="triage-card-bottom">Under Target</div>
+            </button>
+            <button id="c2_triageTarget" class="triage-card triage-card-blue" onclick="handleChamberS2Triage('target')">
+              <div class="triage-card-top"><span>🎯</span> <span id="c2_prescribedTargetReps">8–11</span></div>
+              <div class="triage-card-bottom">Prescribed Reps</div>
+            </button>
+            <button id="c2_triageOverload" class="triage-card triage-card-green" onclick="handleChamberS2Triage('overload')">
+              <div class="triage-card-top"><span>🚀</span> <span id="c2_overloadTargetReps">12+</span></div>
+              <div id="c2_overloadSubtext" class="triage-card-bottom">+2.5kg Next</div>
+            </button>
+          </div>
+
+          <!-- Hidden legacy buttons kept for backward compatibility -->
+          <div class="btn-grid-2 hidden" style="display:none;">
             <button id="c2_btnNo" class="choice-btn" onclick="handleChamberS2Answer('NO')">✕ NO (under 12)</button>
             <button id="c2_btnYes" class="choice-btn" onclick="handleChamberS2Answer('YES')">✓ YES (12 reps)</button>
           </div>
@@ -1948,8 +2144,25 @@
             <span id="c3_minLimitAlertText">Lowest machine weight reached. Load cannot drop further — rest extended.</span>
           </div>
 
-          <p class="question-prompt">What were your reps on Set 3?</p>
-          <div class="btn-grid-3">
+          <!-- CHAMBER 3 SET LOGGING TRIAGE (FULL-SIZED DYNAMIC ISLAND MATCH) -->
+          <p class="triage-section-header">HOW DID THE SET GO? (ONE-TAP LOG)</p>
+          <div class="triage-cards-grid">
+            <button id="c3_triageUnder" class="triage-card triage-card-red" onclick="handleChamberS3Triage('missed')">
+              <div class="triage-card-top"><span>▼</span> <span id="c3_underTargetReps">&lt; 8</span></div>
+              <div class="triage-card-bottom">Under Target</div>
+            </button>
+            <button id="c3_triageTarget" class="triage-card triage-card-blue" onclick="handleChamberS3Triage('target')">
+              <div class="triage-card-top"><span>🎯</span> <span id="c3_prescribedTargetReps">8–11</span></div>
+              <div class="triage-card-bottom">Prescribed Reps</div>
+            </button>
+            <button id="c3_triageOverload" class="triage-card triage-card-green" onclick="handleChamberS3Triage('overload')">
+              <div class="triage-card-top"><span>🚀</span> <span id="c3_overloadTargetReps">12+</span></div>
+              <div id="c3_overloadSubtext" class="triage-card-bottom">+2.5kg Next</div>
+            </button>
+          </div>
+
+          <!-- Hidden legacy buttons kept for backward compatibility -->
+          <div class="btn-grid-3 hidden" style="display:none;">
             <button id="c3_btn12" class="choice-btn" onclick="handleChamberS3Answer('12')">12 Reps</button>
             <button id="c3_btn811" class="choice-btn" onclick="handleChamberS3Answer('8-11')">8–11 Reps</button>
             <button id="c3_btnUnder8" class="choice-btn" onclick="handleChamberS3Answer('UNDER_8')">&lt; 8 Reps</button>
@@ -1979,6 +2192,52 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- SINGLE EXERCISE OVERLOAD RECAP CARD (Shown after completing all sets of an exercise) -->
+      <div id="focusSingleExerciseRecapCard" class="exercise-recap-card hidden">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <span id="recapExSplitBadge" class="badge badge-push">PUSH • LIFT RECAP</span>
+          <span id="recapExDate" style="font-size:11px; color:#94a3b8; font-family:monospace;">10:52 AM</span>
+        </div>
+
+        <div>
+          <h2 id="recapExTitle" style="font-size: 20px; font-weight: 900; color: #fff; margin:0;">Smith Incline Bench</h2>
+          <p id="recapExMeta" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Dynamic Progressive Overload Evaluation</p>
+        </div>
+
+        <div id="recapOutcomeBanner" class="recap-outcome-banner banner-green">
+          🔥 OVERLOAD BREAKTHROUGH (+1 INCREMENT)
+        </div>
+
+        <!-- SETS LOGGED GRID -->
+        <div>
+          <div style="font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Sets Logged</div>
+          <div id="recapSetsGrid" class="recap-sets-grid">
+            <!-- Dynamically populated Set 1, Set 2, Set 3 -->
+          </div>
+        </div>
+
+        <!-- OVERLOAD JUMP BOX -->
+        <div class="overload-delta-box">
+          <div>
+            <div style="font-size: 10px; font-weight: 800; color: #94a3b8;">PREVIOUS ANCHOR</div>
+            <div id="recapPrevWeight" style="font-size: 15px; font-weight: 900; color: #cbd5e1;">115 LBS</div>
+          </div>
+          <div style="font-size: 20px; color: #64748b;">➔</div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; font-weight: 800; color: #34d399;">NEXT SESSION ANCHOR</div>
+            <div id="recapNextWeight" style="font-size: 17px; font-weight: 900; color: #34d399;">117.5 LBS (+2.5 LBS)</div>
+          </div>
+        </div>
+
+        <p id="recapDPOExplanation" style="font-size: 12px; color: #cbd5e1; line-height: 1.4; margin: 0; background: rgba(255,255,255,0.03); padding: 10px 12px; border-radius: 10px;">
+          Set 1 ceiling cleared at 12 reps! Both Set 2 and Set 3 foundations consolidated.
+        </p>
+
+        <button id="btnContinueNextExercise" class="btn btn-green" style="padding: 14px; font-size: 15px; font-weight: 900; width: 100%; border-radius: 12px;" onclick="advanceToNextExerciseAfterRecap()">
+          Continue to Next Lift →
+        </button>
       </div>
 
       <!-- CELEBRATION RECAP (Shown when split is finished) -->
@@ -3490,9 +3749,23 @@
     /* =========================================================================
        DYNAMIC ISLAND & LIVE ACTIVITIES BRIDGE (IOS NATIVE / CAPACITOR)
        ========================================================================= */
+    const getLiveActivityPlugin = function() {
+      if (window.Capacitor?.Plugins?.LiveActivity) {
+        return window.Capacitor.Plugins.LiveActivity;
+      }
+      if (window.Capacitor?.registerPlugin) {
+        try {
+          window.Capacitor.Plugins = window.Capacitor.Plugins || {};
+          window.Capacitor.Plugins.LiveActivity = window.Capacitor.registerPlugin('LiveActivity');
+          return window.Capacitor.Plugins.LiveActivity;
+        } catch (e) {}
+      }
+      return null;
+    };
+
     const LiveActivityBridge = {
       isNative: function() {
-        return !!(window.Capacitor?.Plugins?.LiveActivity || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.liveActivity));
+        return !!(getLiveActivityPlugin() || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.liveActivity));
       },
 
       syncCurrentWorkoutState: function(options = {}) {
@@ -3534,9 +3807,10 @@
             overloadIncrementText: `+${inc} ${unit} Next`
           };
 
-          if (window.Capacitor?.Plugins?.LiveActivity) {
-            window.Capacitor.Plugins.LiveActivity.updateActivity(payload).catch(function() {
-              window.Capacitor.Plugins.LiveActivity.startActivity(payload).catch(function() {});
+          const plugin = getLiveActivityPlugin();
+          if (plugin) {
+            plugin.updateActivity(payload).catch(function() {
+              plugin.startActivity(payload).catch(function() {});
             });
           } else if (window.webkit?.messageHandlers?.liveActivity) {
             window.webkit.messageHandlers.liveActivity.postMessage(payload);
@@ -3548,8 +3822,9 @@
 
       endWorkoutActivity: function() {
         try {
-          if (window.Capacitor?.Plugins?.LiveActivity) {
-            window.Capacitor.Plugins.LiveActivity.endActivity().catch(function() {});
+          const plugin = getLiveActivityPlugin();
+          if (plugin) {
+            plugin.endActivity().catch(function() {});
           } else if (window.webkit?.messageHandlers?.liveActivity) {
             window.webkit.messageHandlers.liveActivity.postMessage({ action: 'end' });
           }
@@ -3557,36 +3832,80 @@
       }
     };
 
+    window.handleLiveActivityAction = function(action, params) {
+      console.log('[LiveActivityBridge] Action received from Dynamic Island:', action, params);
+      try {
+        if (action === 'skip-rest') {
+          if (typeof stopRestTimer === 'function') stopRestTimer(false);
+          if (typeof LiveActivityBridge !== 'undefined') {
+            LiveActivityBridge.syncCurrentWorkoutState({ isResting: false, isTriageLogging: true });
+          }
+        } else if (action === 'adjust-timer') {
+          const delta = parseInt(params?.delta || '0', 10);
+          if (delta && typeof adjustRestTimer === 'function') {
+            adjustRestTimer(delta);
+            LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: typeof restTimerRemaining !== 'undefined' ? restTimerRemaining : 0 });
+          }
+        } else if (action === 'log-triage') {
+          const outcome = params?.outcome || 'target';
+          if (typeof activeSetIndex !== 'undefined') {
+            if (activeSetIndex === 1 && typeof handleChamberS1Triage === 'function') {
+              handleChamberS1Triage(outcome);
+              if (typeof goToSet === 'function') goToSet(2);
+            } else if (activeSetIndex === 2 && typeof handleChamberS2Triage === 'function') {
+              handleChamberS2Triage(outcome);
+              const ex = typeof getActiveFocusedExercise === 'function' ? getActiveFocusedExercise() : null;
+              const numSets = (ex && ex.activeSetsCount) ? ex.activeSetsCount : 3;
+              if (numSets > 2 && typeof goToSet === 'function') {
+                goToSet(3);
+              } else if (typeof completeFocusedExercise === 'function') {
+                completeFocusedExercise();
+              }
+            } else if (activeSetIndex === 3 && typeof handleChamberS3Triage === 'function') {
+              handleChamberS3Triage(outcome);
+              if (typeof completeFocusedExercise === 'function') {
+                completeFocusedExercise();
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[LiveActivityBridge] Error handling action:', e);
+      }
+    };
+
     function testDynamicIslandNow() {
       playTone(580);
-      const hasCapPlugin = !!(window.Capacitor?.Plugins?.LiveActivity);
+      const plugin = getLiveActivityPlugin();
+      const hasCapPlugin = !!plugin;
       const hasWebKitBridge = !!(window.webkit?.messageHandlers?.liveActivity);
 
-      if (!window.Capacitor && !hasWebKitBridge) {
+      if (!window.Capacitor && !hasWebKitBridge && !hasCapPlugin) {
         showToast('Running in regular Web Browser. Open in Xcode app for Dynamic Island.');
         return;
       }
 
       if (hasCapPlugin) {
-        window.Capacitor.Plugins.LiveActivity.isSupported().then(function(res) {
-          if (!res.supported) {
+        plugin.isSupported().then(function(res) {
+          if (res && res.supported === false) {
             showToast('Live Activities require iOS 16.1+ device.');
             return;
           }
-          if (res.enabled === false) {
+          if (res && res.enabled === false) {
             showToast('⚠️ Live Activities disabled in iOS Settings > Overload!');
             return;
           }
           LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: 90 });
           showToast('🚀 Dynamic Island Live Activity started! Swipe up to view Island.');
         }).catch(function(err) {
-          showToast('LiveActivity Error: ' + (err.message || err));
+          LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: 90 });
+          showToast('🚀 Dynamic Island Live Activity started! Swipe up to view Island.');
         });
       } else if (hasWebKitBridge) {
         LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: 90 });
         showToast('🚀 Dynamic Island Live Activity started via Native Bridge! Swipe up to view.');
       } else {
-        showToast('⚠️ LiveActivity Plugin not detected in Capacitor. Pull latest repo & rebuild in Xcode.');
+        showToast('⚠️ LiveActivity Plugin not detected. Make sure you are running the app in Xcode on iOS 16.1+.');
       }
     }
 
@@ -5764,6 +6083,8 @@
       }
 
       document.getElementById('focusCelebrationCard').classList.add('hidden');
+      const singleRecapCard = document.getElementById('focusSingleExerciseRecapCard');
+      if (singleRecapCard) singleRecapCard.classList.add('hidden');
       document.getElementById('focusActiveCard').classList.remove('hidden');
 
       const ex = list[focusedExerciseIndex];
@@ -5930,6 +6251,29 @@
       if (c3Btn811) c3Btn811.textContent = `${rMin}–${rMax - 1} Reps (Target Window)`;
       if (c3BtnUnder8) c3BtnUnder8.textContent = ex.isAssisted ? `< ${rMin} Reps (More Help)` : `< ${rMin} Reps (Missed Floor)`;
 
+      // Populate full-sized Dynamic Island widget triage cards
+      const uText = `< ${rMin}`;
+      const pText = `${rMin}–${rMax - 1}`;
+      const oText = `${rMax}+`;
+      const S_step = ex.microIncrement || ex.increment || 2.5;
+      const oSub = ex.isAssisted ? `-1 Assist` : `+${S_step} ${ex.unit} Next`;
+
+      ['c1', 'c2', 'c3'].forEach(prefix => {
+        const uEl = document.getElementById(`${prefix}_underTargetReps`);
+        const pEl = document.getElementById(`${prefix}_prescribedTargetReps`);
+        const oEl = document.getElementById(`${prefix}_overloadTargetReps`);
+        const subEl = document.getElementById(`${prefix}_overloadSubtext`);
+        if (uEl) uEl.textContent = uText;
+        if (pEl) pEl.textContent = pText;
+        if (oEl) oEl.textContent = oText;
+        if (subEl) subEl.textContent = oSub;
+
+        ['Under', 'Target', 'Overload'].forEach(type => {
+          const btn = document.getElementById(`${prefix}_triage${type}`);
+          if (btn) btn.classList.remove('active-triage');
+        });
+      });
+
       // Set 2 Advance Button
       const c2NextBtn = document.getElementById('c2_btnNext');
       if (numSets === 2) {
@@ -5989,6 +6333,65 @@
     /* =========================================================================
        CHAMBER DECISION HANDLERS (DPO ALGORITHMIC PIPELINE)
        ========================================================================= */
+
+    /* FULL-SIZED DYNAMIC ISLAND MATCH TRIAGE HANDLERS */
+    function handleChamberS1Triage(outcome) {
+      const uCard = document.getElementById('c1_triageUnder');
+      const pCard = document.getElementById('c1_triageTarget');
+      const oCard = document.getElementById('c1_triageOverload');
+      if (uCard) uCard.classList.toggle('active-triage', outcome === 'missed');
+      if (pCard) pCard.classList.toggle('active-triage', outcome === 'target');
+      if (oCard) oCard.classList.toggle('active-triage', outcome === 'overload');
+
+      if (outcome === 'overload') {
+        handleChamberS1Answer('YES');
+      } else if (outcome === 'target') {
+        handleChamberS1Answer('NO');
+        handleChamberS1Followup(true);
+      } else {
+        handleChamberS1Answer('NO');
+        handleChamberS1Followup(false);
+      }
+
+      // Hide legacy secondary followup box so single-tap triage displays verdict cleanly
+      const followup = document.getElementById('c1_followup');
+      if (followup) followup.classList.add('hidden');
+    }
+
+    function handleChamberS2Triage(outcome) {
+      const uCard = document.getElementById('c2_triageUnder');
+      const pCard = document.getElementById('c2_triageTarget');
+      const oCard = document.getElementById('c2_triageOverload');
+      if (uCard) uCard.classList.toggle('active-triage', outcome === 'missed');
+      if (pCard) pCard.classList.toggle('active-triage', outcome === 'target');
+      if (oCard) oCard.classList.toggle('active-triage', outcome === 'overload');
+
+      if (outcome === 'overload') {
+        handleChamberS2Answer('YES');
+      } else {
+        handleChamberS2Answer('NO');
+      }
+    }
+
+    function handleChamberS3Triage(outcome) {
+      const uCard = document.getElementById('c3_triageUnder');
+      const pCard = document.getElementById('c3_triageTarget');
+      const oCard = document.getElementById('c3_triageOverload');
+      if (uCard) uCard.classList.toggle('active-triage', outcome === 'missed');
+      if (pCard) pCard.classList.toggle('active-triage', outcome === 'target');
+      if (oCard) oCard.classList.toggle('active-triage', outcome === 'overload');
+
+      const cat = outcome === 'overload' ? '12' : (outcome === 'target' ? '8-11' : 'UNDER_8');
+      handleChamberS3Answer(cat);
+
+      // Always enable finish/advance button for Set 3 regardless of triage outcome
+      const finishBtn = document.getElementById('c3_btnComplete');
+      if (finishBtn) finishBtn.disabled = false;
+
+      // Hide legacy secondary followup box so single-tap triage displays verdict cleanly
+      const followup = document.getElementById('c3_followup');
+      if (followup) followup.classList.add('hidden');
+    }
 
     /* SET 1: ANCHOR DRIVER (W1) */
     function handleChamberS1Answer(answer) {
@@ -6370,10 +6773,10 @@
       const verdict = document.getElementById('c3_verdict');
       const autoBadge = document.getElementById('c3_autoHistoryBadge');
 
-      b12.className = 'choice-btn';
-      b811.className = 'choice-btn';
-      bu8.className = 'choice-btn';
-      followup.classList.add('hidden');
+      if (b12) b12.className = 'choice-btn';
+      if (b811) b811.className = 'choice-btn';
+      if (bu8) bu8.className = 'choice-btn';
+      if (followup) followup.classList.add('hidden');
 
       const S = ex.microIncrement || ex.increment || 2.5;
       const rMin = ex.repWindowMin || 8;
@@ -6387,7 +6790,7 @@
       if (minAlert) minAlert.classList.add('hidden');
 
       if (category === '12' || category === 'CEILING') {
-        b12.className = 'choice-btn active-green';
+        if (b12) b12.className = 'choice-btn active-green';
         if (ex.isAssisted) {
           // Assisted Set 3: Progressing reduces assistance towards Set 2
           const candidate = Math.max(targetW2, Math.max(minW, prescribedW3 - S));
@@ -6405,13 +6808,16 @@
         } else {
           const candidate = prescribedW3 + S;
           const nextW3 = Math.min(targetW2, candidate);
+          const action = (nextW3 > prescribedW3) ? 'INC' : 'HOLD';
 
           s3Eval = {
             reps: rMax,
             action,
             nextW3,
             floorBreach: false,
-            msg: `Bottom Overload Driver: +1 INCREMENT (${nextW3} ${ex.unit})! Base foundation advancing.`
+            msg: (action === 'INC')
+              ? `Bottom Overload Driver: +1 INCREMENT (${nextW3} ${ex.unit})! Base foundation advancing.`
+              : `Base load equal to Set 2 (${nextW3} ${ex.unit}). Full base consolidation.`
           };
         }
         verdict.className = 'verdict-box verdict-green';
@@ -6419,7 +6825,7 @@
         verdict.classList.remove('hidden');
         document.getElementById('c3_btnComplete').disabled = false;
       } else if (category === '8-11' || category === 'WINDOW') {
-        b811.className = 'choice-btn active-blue';
+        if (b811) b811.className = 'choice-btn active-blue';
 
         s3Eval = {
           reps: rMin + 1,
@@ -6479,8 +6885,8 @@
       if (ex.isAssisted) {
         // In assisted exercises: missed reps means assistance was TOO LOW (weight too heavy)
         if (!wasConsecutive) {
-          btnFollowNo.className = 'choice-btn active-amber';
-          btnFollowYes.className = 'choice-btn';
+          if (btnFollowNo) btnFollowNo.className = 'choice-btn active-amber';
+          if (btnFollowYes) btnFollowYes.className = 'choice-btn';
 
           let candidate = curW3 + S;
           let atMaxLimit = false;
@@ -6504,8 +6910,8 @@
           };
           verdict.className = 'verdict-box verdict-amber';
         } else {
-          btnFollowYes.className = 'choice-btn active-rose';
-          btnFollowNo.className = 'choice-btn';
+          if (btnFollowYes) btnFollowYes.className = 'choice-btn active-rose';
+          if (btnFollowNo) btnFollowNo.className = 'choice-btn';
 
           s3Eval = {
             reps: Math.max(1, rMin - 3),
@@ -6521,8 +6927,8 @@
         // Standard exercise
         const floor3 = Math.max(minW, roundToStep(targetW1 * 0.60, S));
         if (!wasConsecutive) {
-          btnFollowNo.className = 'choice-btn active-amber';
-          btnFollowYes.className = 'choice-btn';
+          if (btnFollowNo) btnFollowNo.className = 'choice-btn active-amber';
+          if (btnFollowYes) btnFollowYes.className = 'choice-btn';
 
           let candidate = curW3 - S;
           let atMinLimit = false;
@@ -6550,8 +6956,8 @@
           };
           verdict.className = 'verdict-box verdict-amber';
         } else {
-          btnFollowYes.className = 'choice-btn active-rose';
-          btnFollowNo.className = 'choice-btn';
+          if (btnFollowYes) btnFollowYes.className = 'choice-btn active-rose';
+          if (btnFollowNo) btnFollowNo.className = 'choice-btn';
 
           s3Eval = {
             reps: Math.max(1, rMin - 3),
@@ -6573,9 +6979,18 @@
     /* COMMIT WORKOUT AND LOG TO DPO HISTORY */
     function commitAndAdvanceExercise() {
       const ex = getActiveFocusedExercise();
-      const numSets = (ex && ex.activeSetsCount) ? ex.activeSetsCount : (ex && ex.targetSets ? ex.targetSets : 3);
-      if (!ex || !s1Eval || !s2Eval) return;
-      if (numSets === 3 && !s3Eval) return;
+      if (!ex) return;
+
+      const numSets = ex.activeSetsCount || ex.targetSets || 3;
+      if (!s1Eval) {
+        s1Eval = { reps: ex.repWindowMax || 12, action: 'HOLD', nextLoads: ex.loads ? [...ex.loads] : [100, 100, 100] };
+      }
+      if (!s2Eval) {
+        s2Eval = { reps: ex.repWindowMax || 12, action: 'HOLD', nextW2: ex.loads ? ex.loads[1] : 100, set3Params: resolveSet3Parameters(ex, ex, 'FAST_PACED') };
+      }
+      if (numSets === 3 && !s3Eval) {
+        s3Eval = { reps: ex.repWindowMax || 12, action: 'HOLD', nextW3: ex.loads ? ex.loads[2] : 100 };
+      }
 
       playTone(660, 'triangle', 0.2);
 
@@ -6719,6 +7134,100 @@
 
       showToast(`Logged ${ex.name}! Anchor: ${finalW1} ${ex.unit}`);
 
+      showExerciseRecapCard(ex, historyEntry);
+    }
+
+    function showExerciseRecapCard(ex, historyEntry) {
+      document.getElementById('focusActiveCard').classList.add('hidden');
+      const recapCard = document.getElementById('focusSingleExerciseRecapCard');
+      if (!recapCard) {
+        focusedExerciseIndex++;
+        renderFocusedExercise();
+        return;
+      }
+
+      recapCard.classList.remove('hidden');
+      playTone(660, 'sine', 0.15);
+
+      const list = getFocusedList();
+      const isFinal = (focusedExerciseIndex >= list.length - 1);
+
+      document.getElementById('recapExSplitBadge').textContent = `${ex.split} • LIFT RECAP (${focusedExerciseIndex + 1}/${list.length})`;
+      const now = new Date();
+      document.getElementById('recapExDate').textContent = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('recapExTitle').textContent = ex.name;
+
+      const prevW = historyEntry.loadsUsed[0];
+      const nextW = historyEntry.nextTargetWeight;
+      const unit = (ex.unit || 'LBS').toUpperCase();
+      const delta = Math.abs(roundToStep(nextW - prevW, ex.microIncrement || 2.5));
+
+      document.getElementById('recapPrevWeight').textContent = `${prevW} ${unit}`;
+
+      const bannerEl = document.getElementById('recapOutcomeBanner');
+      const nextWeightEl = document.getElementById('recapNextWeight');
+
+      if (ex.isAssisted) {
+        if (nextW < prevW) {
+          bannerEl.className = 'recap-outcome-banner banner-green';
+          bannerEl.textContent = `🤝 ASSISTANCE REDUCED (-1 PIN)`;
+          nextWeightEl.textContent = `${nextW} ${unit} (-${delta} ${unit} Assist)`;
+          nextWeightEl.style.color = '#34d399';
+        } else {
+          bannerEl.className = 'recap-outcome-banner banner-cyan';
+          bannerEl.textContent = `🛡️ ASSISTED LOAD MAINTAINED`;
+          nextWeightEl.textContent = `${nextW} ${unit} (Hold)`;
+          nextWeightEl.style.color = '#38bdf8';
+        }
+      } else {
+        if (nextW > prevW) {
+          bannerEl.className = 'recap-outcome-banner banner-green';
+          bannerEl.textContent = `🔥 OVERLOAD BREAKTHROUGH (+1 INCREMENT)`;
+          nextWeightEl.textContent = `${nextW} ${unit} (+${delta} ${unit})`;
+          nextWeightEl.style.color = '#34d399';
+        } else if (historyEntry.progressionSummary.includes('Intermediate Overload')) {
+          bannerEl.className = 'recap-outcome-banner banner-cyan';
+          bannerEl.textContent = `📈 INTERMEDIATE OVERLOAD ADVANCED`;
+          nextWeightEl.textContent = `${nextW} ${unit} (W2 Overload)`;
+          nextWeightEl.style.color = '#38bdf8';
+        } else {
+          bannerEl.className = 'recap-outcome-banner banner-cyan';
+          bannerEl.textContent = `🛡️ WORKING LOAD CONSOLIDATED`;
+          nextWeightEl.textContent = `${nextW} ${unit} (Hold)`;
+          nextWeightEl.style.color = '#38bdf8';
+        }
+      }
+
+      document.getElementById('recapDPOExplanation').textContent = historyEntry.progressionSummary || 'Workout performance recorded in progression history.';
+
+      // Grid of sets logged
+      const gridEl = document.getElementById('recapSetsGrid');
+      gridEl.innerHTML = '';
+
+      const setsCount = historyEntry.targetSets || 3;
+      const repsArr = [historyEntry.set1Reps, historyEntry.set2Reps, historyEntry.set3Reps];
+      const loadsArr = historyEntry.loadsUsed;
+
+      for (let i = 0; i < setsCount; i++) {
+        const item = document.createElement('div');
+        item.className = 'recap-set-item';
+        item.innerHTML = `
+          <div class="set-lbl">SET ${i + 1}</div>
+          <div class="set-val">${repsArr[i] !== undefined ? repsArr[i] : '-'} Reps</div>
+          <div style="font-size:10px; color:#94a3b8; font-family:monospace; margin-top:2px;">${loadsArr[i] !== undefined ? loadsArr[i] : prevW} ${unit}</div>
+        `;
+        gridEl.appendChild(item);
+      }
+
+      const btn = document.getElementById('btnContinueNextExercise');
+      if (btn) {
+        btn.textContent = isFinal ? 'View Workout Recap 🏆' : 'Continue to Next Lift →';
+      }
+    }
+
+    function advanceToNextExerciseAfterRecap() {
+      const recapCard = document.getElementById('focusSingleExerciseRecapCard');
+      if (recapCard) recapCard.classList.add('hidden');
       focusedExerciseIndex++;
       renderFocusedExercise();
     }

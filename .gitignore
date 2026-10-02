@@ -10,6 +10,8 @@ ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcuserstate
 DerivedData/
 .build/
+.swiftpm/
+xcuserdata/
 
 # OS files
 .DS_Store

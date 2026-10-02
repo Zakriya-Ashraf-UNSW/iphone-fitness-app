@@ -6,7 +6,7 @@ class ViewController: CAPBridgeViewController, WKScriptMessageHandler {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         // Register LiveActivityPlugin directly on the Capacitor bridge
-        bridge?.registerPluginInstance(LiveActivityPlugin())
+        bridge?.registerPluginInstance(LiveActivityPlugin.sharedInstance)
     }
 
     override func viewDidLoad() {
