@@ -5936,7 +5936,8 @@
 
           const w1 = ex.loads ? ex.loads[0] : (ex.weight || 0);
           const row = document.createElement('div');
-          row.style.cssText = 'background: #18181b; border: 1px solid #27272a; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between;';
+          row.style.cssText = 'background: #18181b; border: 1px solid #27272a; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;';
+          row.onclick = () => startFocusedWorkoutRoutineAt(idx);
           row.innerHTML = `
             <div>
               <div style="display: flex; align-items: center; gap: 6px;">
@@ -5952,6 +5953,25 @@
           listContainer.appendChild(row);
         });
       }
+    }
+
+    function startFocusedWorkoutRoutineAt(idx) {
+      isRoutineSessionActive = true;
+      focusedExerciseIndex = idx || 0;
+      activeSetIndex = 1;
+      focusedSessionLog = [];
+      warmupsSkippedForExercise = {};
+
+      const launcherCard = document.getElementById('focusRoutineLauncherCard');
+      if (launcherCard) launcherCard.classList.add('hidden');
+      const activeCard = document.getElementById('focusActiveCard');
+      if (activeCard) activeCard.classList.remove('hidden');
+
+      renderFocusedExercise();
+      const list = getFocusedList();
+      const ex = list[focusedExerciseIndex];
+      playTone(600, 'sine', 0.15);
+      showToast(`▶ Starting ${focusedSplit} Routine - ${ex ? ex.name : 'Lift ' + (idx + 1)}`);
     }
 
     function startFocusedWorkoutRoutine() {
@@ -6349,9 +6369,22 @@
       currentWarmupLoadText = `${w.load} ${ex.unit.toUpperCase()}`;
       currentWarmupRepsText = `${w.targetReps}r`;
 
-      // Prescribed warmup rest
+      // Prescribed warmup rest setup (idle until set is logged)
+      stopRestTimer(false);
       restTimerPrescribed = w.restSeconds || 60;
-      updatePrescribedRestUI(true);
+      restTimerRemaining = restTimerPrescribed;
+      const labelEl = document.getElementById('restTimerLabel');
+      if (labelEl) labelEl.textContent = 'REST AFTER WARM-UP ' + currentWarmupIndex;
+      const reasonEl = document.getElementById('restTimerReasonBadge');
+      if (reasonEl) reasonEl.textContent = (w.restSeconds || 60) + 's Warm-up Recovery';
+      renderRestTimerDisplay();
+
+      const compBtn = document.getElementById('btnCompleteWarmup');
+      if (compBtn) {
+        compBtn.className = 'btn btn-green';
+        compBtn.innerHTML = '<span>✓ Complete Warm-Up ' + currentWarmupIndex + ' & Start Rest (' + restTimerPrescribed + 's)</span>';
+        compBtn.onclick = completeCurrentWarmupSet;
+      }
 
       if (typeof LiveActivityBridge !== 'undefined') {
         LiveActivityBridge.syncCurrentWorkoutState({
@@ -6377,11 +6410,25 @@
 
       restTimerPrescribed = restSec;
       restTimerRemaining = restSec;
+      const labelEl = document.getElementById('restTimerLabel');
+      if (labelEl) {
+        labelEl.textContent = currentWarmupIndex < currentTotalWarmups 
+          ? ('REST FOR WARM-UP ' + (currentWarmupIndex + 1)) 
+          : 'REST FOR SET 1 (ANCHOR SET)';
+      }
       startRestTimer();
+
+      const compBtn = document.getElementById('btnCompleteWarmup');
+      if (compBtn) {
+        compBtn.className = 'btn btn-amber';
+        compBtn.innerHTML = '<span>▶ Ready for ' + (currentWarmupIndex < currentTotalWarmups ? 'Warm-Up ' + (currentWarmupIndex + 1) : 'Set 1 (Anchor)') + ' ›</span>';
+        compBtn.onclick = advanceWarmupAfterRest;
+      }
     }
 
     function advanceWarmupAfterRest() {
       if (!isWarmupMode || !currentWarmupPrescription) return;
+      stopRestTimer(false);
       if (currentWarmupIndex < currentTotalWarmups) {
         currentWarmupIndex++;
         renderActiveWarmupStageUI();
@@ -6675,7 +6722,9 @@
       playTone(520);
       activeSetIndex = setNum;
       updateChamberVisibility();
-      updatePrescribedRestUI(true);
+      if (!restTimerRunning) {
+        updatePrescribedRestUI(false);
+      }
       if (typeof LiveActivityBridge !== 'undefined') {
         LiveActivityBridge.syncCurrentWorkoutState({ isResting: restTimerRunning, restDuration: restTimerRemaining, isTriageLogging: false });
       }
@@ -7097,6 +7146,9 @@
       // Hide legacy secondary followup box so single-tap triage displays verdict cleanly
       const followup = document.getElementById('c1_followup');
       if (followup) followup.classList.add('hidden');
+
+      // Auto-start prescribed rest timer for Set 2 immediately upon logging Set 1
+      updatePrescribedRestUI(true);
     }
 
     function handleChamberS1RecalibrationTriage(outcome) {
@@ -7147,6 +7199,12 @@
       } else {
         handleChamberS2Answer('NO');
       }
+
+      const ex = getActiveFocusedExercise();
+      const numSets = (ex && ex.activeSetsCount) ? ex.activeSetsCount : 3;
+      if (numSets > 2) {
+        updatePrescribedRestUI(true);
+      }
     }
 
     function handleChamberS3Triage(outcome) {
@@ -7159,6 +7217,9 @@
 
       const cat = outcome === 'overload' ? '12' : (outcome === 'target' ? '8-11' : 'UNDER_8');
       handleChamberS3Answer(cat);
+
+      // Stop running rest timer when Set 3 is logged
+      stopRestTimer(false);
 
       // Always enable finish/advance button for Set 3 regardless of triage outcome
       const finishBtn = document.getElementById('c3_btnComplete');
@@ -8240,9 +8301,17 @@
     function startTrainingLift(exerciseId) {
       focusedSplit = currentSplit;
       setFocusedSplit(currentSplit);
+      isRoutineSessionActive = true;
+      const launcherCard = document.getElementById('focusRoutineLauncherCard');
+      if (launcherCard) launcherCard.classList.add('hidden');
+      const activeCard = document.getElementById('focusActiveCard');
+      if (activeCard) activeCard.classList.remove('hidden');
+
       const list = getFocusedList();
       const targetIdx = list.findIndex(item => item.id === exerciseId);
       if (targetIdx !== -1) focusedExerciseIndex = targetIdx;
+      activeSetIndex = 1;
+      warmupsSkippedForExercise = {};
       switchMainView('focused');
     }
 
