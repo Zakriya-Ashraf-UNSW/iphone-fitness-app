@@ -1,11 +1,10 @@
 import UIKit
-import Capacitor
+import SwiftUI
 import ActivityKit
 import SharedWorkoutModels
 import os
 
 private let logger = Logger(subsystem: "com.overload.fitnessapp", category: "URLHandler")
-
 private let appGroupID = "group.com.overload.fitnessapp"
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -14,11 +13,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
 
-        window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = ViewController()
-        window?.makeKeyAndVisible()
+        let hostingController = UIHostingController(rootView: MainTabView())
+        hostingController.view.backgroundColor = .black
 
-        SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
+        window = UIWindow(windowScene: windowScene)
+        window?.rootViewController = hostingController
+        window?.makeKeyAndVisible()
 
         // Handle URL if app was launched via URL
         if let urlContext = connectionOptions.urlContexts.first {
@@ -42,11 +42,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         if let urlContext = URLContexts.first(where: { $0.url.scheme == "overload" }) {
             handleOverloadURL(urlContext.url)
         }
-        SceneDelegateProxy.shared.scene(scene, openURLContexts: URLContexts)
-    }
-
-    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
-        SceneDelegateProxy.shared.scene(scene, continue: userActivity)
     }
 
     // MARK: - Widget Action IPC via App Group + Darwin Notifications
@@ -94,7 +89,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             for (key, value) in payload where key != "action" && key != "timestamp" {
                 params.append(URLQueryItem(name: key, value: value))
             }
-            notifyWebviewOfAction(action: action, params: params)
+            dispatchActionToManager(action: action, params: params)
         }
     }
 
@@ -105,88 +100,35 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let params = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
         
         logger.info("Handling overload URL: \(url.absoluteString)")
-
-        // Notify Webview so JavaScript engine can process the action in app UI
-        notifyWebviewOfAction(action: action, params: params)
-
-        Task {
-            for activity in Activity<WorkoutActivityAttributes>.activities {
-                var state = activity.content.state
-                logger.info("Found activity \(activity.id), processing action: \(action)")
-
-                switch action {
-                case "skip-rest":
-                    state.isResting = false
-                    state.restEndTimestamp = nil
-                    state.isTriageLogging = true
-
-                case "adjust-timer":
-                    let delta = Int(params?.first(where: { $0.name == "delta" })?.value ?? "0") ?? 0
-                    let now = Date().timeIntervalSince1970
-                    let currentEnd = state.restEndTimestamp ?? (now + 60)
-                    let newEnd = max(now + 1, currentEnd + Double(delta))
-                    state.restEndTimestamp = newEnd
-                    state.isResting = true
-                    logger.info("Adjusted timer by \(delta)s, new end: \(newEnd)")
-
-                case "log-triage":
-                    let outcome = params?.first(where: { $0.name == "outcome" })?.value ?? "target"
-                    state.isTriageLogging = false
-                    if state.setIndex < state.totalSets {
-                        state.isResting = true
-                        state.restEndTimestamp = Date().addingTimeInterval(90).timeIntervalSince1970
-                        state.setIndex += 1
-                    } else {
-                        // Final set completed - awaiting webview progression recap sync
-                        state.isResting = false
-                        state.restEndTimestamp = nil
-                    }
-                    logger.info("Logged triage outcome: \(outcome)")
-
-                case "continue-next-exercise":
-                    logger.info("Continue next exercise forwarded to webview")
-                    return
-
-                case "log-warmup":
-                    logger.info("Log warmup forwarded to webview")
-                    return
-
-                case "skip-warmup":
-                    logger.info("Skip warmup forwarded to webview")
-                    return
-
-                case "enter-exact":
-                    logger.info("Enter exact reps/weight - forwarded to webview")
-                    return
-
-                default:
-                    logger.warning("Unknown action: \(action)")
-                    return
-                }
-
-                let content = ActivityContent(state: state, staleDate: nil)
-                await activity.update(content)
-                logger.info("Activity \(activity.id) updated successfully")
-            }
-        }
+        dispatchActionToManager(action: action, params: params)
     }
 
-    private func notifyWebviewOfAction(action: String, params: [URLQueryItem]?) {
-        DispatchQueue.main.async { [weak self] in
-            guard let vc = self?.window?.rootViewController as? CAPBridgeViewController ?? (self?.window?.rootViewController as? ViewController) else {
-                return
-            }
-            var paramDict: [String: String] = [:]
-            params?.forEach { paramDict[$0.name] = $0.value }
-            
-            if let jsonData = try? JSONSerialization.data(withJSONObject: paramDict),
-               let jsonString = String(data: jsonData, encoding: .utf8) {
-                let js = "if (typeof window.handleLiveActivityAction === 'function') { window.handleLiveActivityAction('\(action)', \(jsonString)); } else { window.__pendingLiveActivityActions = window.__pendingLiveActivityActions || []; window.__pendingLiveActivityActions.push({ action: '\(action)', params: \(jsonString) }); }"
-                vc.bridge?.webView?.evaluateJavaScript(js) { (_, error) in
-                    if let error = error {
-                        logger.error("JavaScript evaluation error: \(error.localizedDescription)")
-                    }
+    private func dispatchActionToManager(action: String, params: [URLQueryItem]?) {
+        DispatchQueue.main.async {
+            let manager = WorkoutSessionManager.shared
+            switch action {
+            case "skip-rest":
+                manager.stopRestTimer()
+            case "adjust-timer":
+                let delta = Int(params?.first(where: { $0.name == "delta" })?.value ?? "0") ?? 0
+                manager.adjustRest(by: delta)
+            case "log-triage":
+                let outcome = params?.first(where: { $0.name == "outcome" })?.value ?? "target"
+                if manager.activeSetIndex == 1 {
+                    manager.logSet1(outcome: outcome)
+                } else if manager.activeSetIndex == 2 {
+                    manager.logSet2(outcome: outcome)
+                } else {
+                    manager.logSet3(outcome: outcome)
                 }
+            case "log-warmup":
+                manager.completeWarmupSet()
+            case "skip-warmup":
+                manager.skipWarmups()
+            case "continue-next-exercise":
+                manager.advanceToNextExerciseAfterRecap()
+            default:
+                logger.warning("Unhandled action: \(action)")
             }
         }
     }

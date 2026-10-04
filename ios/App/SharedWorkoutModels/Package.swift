@@ -15,7 +15,10 @@ let package = Package(
     targets: [
         .target(
             name: "SharedWorkoutModels",
-            path: "Sources"
+            path: "Sources",
+            resources: [
+                .process("default_exercises.json")
+            ]
         ),
     ]
 )

@@ -16,3 +16,7 @@ xcuserdata/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Agents and local skills
+.agents/
+
