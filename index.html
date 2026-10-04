@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Overload" />
-  <meta name="theme-color" content="#050811" />
+  <meta name="theme-color" content="#000000" />
   <title>Overload 3-Set Progression Tracker</title>
   <style>
     *, *::before, *::after {
@@ -16,21 +16,21 @@
       -webkit-tap-highlight-color: transparent;
     }
     :root {
-      --bg-base: #050811;
-      --bg-card: #0d1524;
-      --bg-card-sub: #131e33;
-      --bg-elevated: #1b2942;
-      --border-color: #223552;
-      --border-accent: #2e466b;
-      --text-main: #f8fafc;
-      --text-sub: #94a3b8;
-      --text-muted: #64748b;
-      --brand-green: #10b981;
-      --brand-green-hover: #059669;
-      --brand-green-glow: rgba(16, 185, 129, 0.28);
-      --brand-blue: #38bdf8;
-      --brand-amber: #f59e0b;
-      --brand-rose: #f43f5e;
+      --bg-base: #000000;
+      --bg-card: #09090b;
+      --bg-card-sub: #121214;
+      --bg-elevated: #18181b;
+      --border-color: #27272a;
+      --border-accent: #3f3f46;
+      --text-main: #ffffff;
+      --text-sub: #a1a1aa;
+      --text-muted: #71717a;
+      --brand-green: #ffffff;
+      --brand-green-hover: #e4e4e7;
+      --brand-green-glow: none;
+      --brand-blue: #e4e4e7;
+      --brand-amber: #d4d4d8;
+      --brand-rose: #a1a1aa;
       --radius-sm: 8px;
       --radius-md: 14px;
       --radius-lg: 20px;
@@ -55,7 +55,7 @@
     }
 
     header {
-      background: rgba(13, 21, 36, 0.96);
+      background: rgba(0, 0, 0, 0.95);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border-color);
@@ -83,11 +83,11 @@
       width: 32px;
       height: 32px;
       border-radius: var(--radius-sm);
-      background: linear-gradient(135deg, var(--brand-green), #047857);
+      background: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #032117;
+      color: #000000;
       font-weight: 900;
       font-size: 15px;
     }
@@ -97,10 +97,11 @@
       letter-spacing: 0.5px;
       line-height: 1.1;
       text-transform: uppercase;
+      color: #ffffff;
     }
     .logo-text p {
       font-size: 10px;
-      color: var(--brand-green);
+      color: var(--text-sub);
       font-family: monospace;
       font-weight: 700;
       letter-spacing: 1px;
@@ -116,7 +117,7 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      border: 1px solid transparent;
+      border: 1px solid var(--border-color);
       border-radius: var(--radius-sm);
       padding: 8px 12px;
       font-size: 12px;
@@ -128,23 +129,30 @@
     }
     .btn:active { transform: scale(0.97); }
     .btn-green {
-      background: var(--brand-green);
-      color: #032117;
+      background: #ffffff;
+      color: #000000;
       font-weight: 900;
+      border-color: #ffffff;
     }
-    .btn-green:hover { background: var(--brand-green-hover); }
+    .btn-green:hover { background: #e4e4e7; border-color: #e4e4e7; }
     .btn-rose-outline {
-      background: rgba(244, 63, 94, 0.1);
-      border-color: rgba(244, 63, 94, 0.4);
-      color: #fda4af;
+      background: var(--bg-card-sub);
+      border-color: var(--border-color);
+      color: #d4d4d8;
     }
-    .btn-rose-outline:hover { background: rgba(244, 63, 94, 0.2); }
+    .btn-rose-outline:hover { background: var(--bg-elevated); border-color: var(--border-accent); }
     .btn-blue-outline {
-      background: rgba(56, 189, 248, 0.1);
-      border-color: rgba(56, 189, 248, 0.4);
-      color: #7dd3fc;
+      background: var(--bg-card-sub);
+      border-color: var(--border-color);
+      color: #ffffff;
     }
-    .btn-blue-outline:hover { background: rgba(56, 189, 248, 0.2); }
+    .btn-blue-outline:hover { background: var(--bg-elevated); border-color: var(--border-accent); }
+    .btn-amber-outline {
+      background: var(--bg-card-sub);
+      border-color: var(--border-color);
+      color: #d4d4d8;
+    }
+    .btn-amber-outline:hover { background: var(--bg-elevated); border-color: var(--border-accent); }
 
     .badge {
       display: inline-block;
@@ -157,14 +165,14 @@
       letter-spacing: 0.5px;
     }
     .badge-lbs {
-      background: rgba(245, 158, 11, 0.15);
-      color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.4);
+      background: #18181b;
+      color: #ffffff;
+      border: 1px solid var(--border-accent);
     }
     .badge-kg {
-      background: rgba(56, 189, 248, 0.15);
-      color: #7dd3fc;
-      border: 1px solid rgba(56, 189, 248, 0.4);
+      background: #18181b;
+      color: #ffffff;
+      border: 1px solid var(--border-accent);
     }
 
     main {
@@ -208,7 +216,7 @@
     .view-tab-btn {
       padding: 9px 4px;
       border-radius: 10px;
-      border: none;
+      border: 1px solid transparent;
       background: transparent;
       color: var(--text-sub);
       font-weight: 800;
@@ -223,10 +231,11 @@
     }
     .view-tab-btn.active {
       background: var(--bg-elevated);
-      color: #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      color: #ffffff;
+      border-color: var(--border-accent);
+      box-shadow: none;
     }
-    .view-tab-btn.highlight { color: #6ee7b7; }
+    .view-tab-btn.highlight { color: #ffffff; }
 
     /* CALIBRATION VIEW STYLES */
     .calib-card {
@@ -265,17 +274,17 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 3px;
+      height: 2px;
     }
-    .calib-kpi-box.green::before { background: var(--brand-green); }
-    .calib-kpi-box.blue::before { background: var(--brand-blue); }
-    .calib-kpi-box.amber::before { background: var(--brand-amber); }
-    .calib-kpi-box.rose::before { background: var(--brand-rose); }
+    .calib-kpi-box.green::before { background: #ffffff; }
+    .calib-kpi-box.blue::before { background: #d4d4d8; }
+    .calib-kpi-box.amber::before { background: #a1a1aa; }
+    .calib-kpi-box.rose::before { background: #71717a; }
     .calib-kpi-val {
       font-size: 20px;
       font-weight: 900;
       font-family: monospace;
-      color: #fff;
+      color: #ffffff;
     }
     .calib-kpi-lbl {
       font-size: 10px;
@@ -305,16 +314,16 @@
       cursor: pointer;
     }
     .calib-item-card:hover {
-      border-color: var(--brand-blue);
+      border-color: var(--border-accent);
       transform: translateY(-1px);
     }
     .calib-item-card.selected {
-      border-color: #38bdf8;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+      border-color: #ffffff;
+      box-shadow: none;
     }
     .calib-item-card.recal-due {
-      border-color: rgba(245, 158, 11, 0.6);
-      box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+      border-color: #a1a1aa;
+      box-shadow: none;
     }
     .calib-step-tracker {
       display: flex;
@@ -325,21 +334,16 @@
       flex: 1;
       height: 6px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.15);
       transition: all 0.2s ease;
     }
     .calib-step-dot.active {
-      background: var(--brand-blue);
-      box-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
+      background: #ffffff;
+      box-shadow: none;
     }
     .calib-step-dot.due {
-      background: var(--brand-amber);
-      box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
-      animation: calibPulse 1.5s infinite;
-    }
-    @keyframes calibPulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(1.05); }
+      background: #a1a1aa;
+      box-shadow: none;
     }
     .cascade-bar-container {
       display: flex;
@@ -359,7 +363,7 @@
     }
     .cascade-bar-track {
       height: 10px;
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.08);
       border-radius: 999px;
       position: relative;
       overflow: hidden;
@@ -374,7 +378,7 @@
       top: 0;
       bottom: 0;
       width: 2px;
-      background: rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.6);
       z-index: 2;
     }
     .calib-filter-bar {
@@ -398,9 +402,9 @@
       transition: all 0.15s ease;
     }
     .calib-filter-pill.active {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: rgba(56, 189, 248, 0.5);
-      color: #7dd3fc;
+      background: #ffffff;
+      border-color: #ffffff;
+      color: #000000;
     }
 
     /* SPLIT ROUTINE PILLS */
@@ -430,16 +434,16 @@
       transition: all 0.12s ease;
     }
     .split-pill.active {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: rgba(16, 185, 129, 0.4);
-      color: var(--brand-green);
+      background: #ffffff;
+      border-color: #ffffff;
+      color: #000000;
     }
 
     /* LAST SESSION SNAPSHOT BANNER */
     .last-session-banner {
-      background: #080e1b;
+      background: var(--bg-card-sub);
       border: 1px solid var(--border-color);
-      border-left: 3px solid var(--brand-blue);
+      border-left: 3px solid #ffffff;
       border-radius: var(--radius-sm);
       padding: 8px 12px;
       font-size: 11px;
@@ -452,7 +456,7 @@
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: var(--brand-blue);
+      color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -472,7 +476,7 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      box-shadow: 0 12px 36px rgba(0,0,0,0.55);
+      box-shadow: none;
     }
     .focus-top-meta {
       display: flex;
@@ -484,7 +488,7 @@
     .exercise-title {
       font-size: 17px;
       font-weight: 900;
-      color: #fff;
+      color: #ffffff;
     }
     .exercise-subtext {
       font-size: 11px;
@@ -516,15 +520,15 @@
       transition: all 0.15s ease;
     }
     .step-pill.current {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: var(--brand-green);
-      color: #6ee7b7;
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+      background: #ffffff;
+      border-color: #ffffff;
+      color: #000000;
+      box-shadow: none;
     }
     .step-pill.completed {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: rgba(56, 189, 248, 0.4);
-      color: #7dd3fc;
+      background: #18181b;
+      border-color: #3f3f46;
+      color: #ffffff;
     }
 
     /* SINGLE SET CHAMBER */
@@ -551,14 +555,14 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: var(--bg-elevated);
-      color: var(--brand-green);
+      background: #18181b;
+      color: #ffffff;
       font-size: 13px;
       font-weight: 900;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid var(--brand-green);
+      border: 1px solid #3f3f46;
     }
     .set-hero-title {
       font-size: 13px;
@@ -572,15 +576,15 @@
       font-weight: 800;
       padding: 4px 10px;
       border-radius: 8px;
-      background: #080c14;
-      border: 1px solid var(--border-accent);
-      color: #38bdf8;
+      background: #121214;
+      border: 1px solid var(--border-color);
+      color: #ffffff;
     }
 
     .question-prompt {
       font-size: 14px;
       font-weight: 800;
-      color: #fff;
+      color: #ffffff;
     }
     .btn-grid-2 {
       display: grid;
@@ -604,26 +608,26 @@
       transition: all 0.12s ease;
       text-align: center;
     }
-    .choice-btn:hover { background: #24354f; }
+    .choice-btn:hover { background: #27272a; border-color: #3f3f46; }
     .choice-btn.active-green {
-      background: var(--brand-green) !important;
-      color: #032117 !important;
-      border-color: var(--brand-green) !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      border-color: #ffffff !important;
     }
     .choice-btn.active-rose {
-      background: var(--brand-rose) !important;
-      color: #fff !important;
-      border-color: var(--brand-rose) !important;
+      background: #27272a !important;
+      color: #ffffff !important;
+      border-color: #ffffff !important;
     }
     .choice-btn.active-amber {
-      background: var(--brand-amber) !important;
-      color: #1a1000 !important;
-      border-color: var(--brand-amber) !important;
+      background: #1f1f23 !important;
+      color: #ffffff !important;
+      border-color: #a1a1aa !important;
     }
     .choice-btn.active-blue {
-      background: var(--brand-blue) !important;
-      color: #032117 !important;
-      border-color: var(--brand-blue) !important;
+      background: #27272a !important;
+      color: #ffffff !important;
+      border-color: #ffffff !important;
     }
 
     /* Dynamic Island Consistent Triage Set Logging UI (Full-Sized) */
@@ -631,7 +635,7 @@
       font-size: 11px;
       font-weight: 800;
       font-family: SF Mono, SFMono-Regular, ui-monospace, monospace;
-      color: rgba(255, 255, 255, 0.65);
+      color: var(--text-sub);
       letter-spacing: 0.6px;
       text-transform: uppercase;
       margin: 12px 0 10px 0;
@@ -652,7 +656,7 @@
       align-items: center;
       justify-content: center;
       gap: 4px;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.15s ease;
       user-select: none;
       outline: none;
       position: relative;
@@ -660,7 +664,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     .triage-card:active {
-      transform: scale(0.95);
+      transform: scale(0.96);
     }
     .triage-card-top {
       display: flex;
@@ -679,54 +683,54 @@
       text-align: center;
     }
 
-    /* Red / Under Target Card */
+    /* Under Target Card */
     .triage-card-red {
-      background: linear-gradient(180deg, rgba(64, 15, 26, 0.85) 0%, rgba(40, 8, 16, 0.95) 100%);
-      border: 1.5px solid rgba(244, 63, 94, 0.7);
-      box-shadow: 0 4px 14px rgba(244, 63, 94, 0.12);
+      background: #121214;
+      border: 1.5px solid #27272a;
+      box-shadow: none;
     }
-    .triage-card-red .triage-card-top { color: #fda4af; }
-    .triage-card-red .triage-card-bottom { color: #f43f5e; }
+    .triage-card-red .triage-card-top { color: #e4e4e7; }
+    .triage-card-red .triage-card-bottom { color: #a1a1aa; }
     .triage-card-red:hover, .triage-card-red.active-triage {
-      background: linear-gradient(180deg, rgba(88, 20, 36, 0.95) 0%, rgba(64, 15, 26, 0.98) 100%);
-      border-color: #f43f5e;
-      box-shadow: 0 0 18px rgba(244, 63, 94, 0.45);
+      background: #1f1f23;
+      border-color: #ffffff;
+      box-shadow: none;
     }
 
-    /* Blue / Prescribed Target Card */
+    /* Prescribed Target Card */
     .triage-card-blue {
-      background: linear-gradient(180deg, rgba(13, 46, 71, 0.85) 0%, rgba(8, 28, 45, 0.95) 100%);
-      border: 1.5px solid rgba(56, 189, 248, 0.7);
-      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.12);
+      background: #18181b;
+      border: 1.5px solid #3f3f46;
+      box-shadow: none;
     }
-    .triage-card-blue .triage-card-top { color: #7dd3fc; }
-    .triage-card-blue .triage-card-bottom { color: #38bdf8; }
+    .triage-card-blue .triage-card-top { color: #ffffff; }
+    .triage-card-blue .triage-card-bottom { color: #d4d4d8; }
     .triage-card-blue:hover, .triage-card-blue.active-triage {
-      background: linear-gradient(180deg, rgba(18, 64, 98, 0.95) 0%, rgba(13, 46, 71, 0.98) 100%);
-      border-color: #38bdf8;
-      box-shadow: 0 0 18px rgba(56, 189, 248, 0.45);
+      background: #27272a;
+      border-color: #ffffff;
+      box-shadow: none;
     }
 
-    /* Green / Overload Card */
+    /* Overload Card */
     .triage-card-green {
-      background: linear-gradient(180deg, rgba(10, 56, 36, 0.85) 0%, rgba(6, 34, 22, 0.95) 100%);
-      border: 1.5px solid rgba(16, 185, 129, 0.7);
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.12);
+      background: #ffffff;
+      border: 1.5px solid #ffffff;
+      box-shadow: none;
     }
-    .triage-card-green .triage-card-top { color: #6ee7b7; }
-    .triage-card-green .triage-card-bottom { color: #10b981; }
+    .triage-card-green .triage-card-top { color: #000000; }
+    .triage-card-green .triage-card-bottom { color: #000000; }
     .triage-card-green:hover, .triage-card-green.active-triage {
-      background: linear-gradient(180deg, rgba(14, 78, 50, 0.95) 0%, rgba(10, 56, 36, 0.98) 100%);
-      border-color: #10b981;
-      box-shadow: 0 0 18px rgba(16, 185, 129, 0.45);
+      background: #e4e4e7;
+      border-color: #ffffff;
+      box-shadow: none;
     }
 
     .history-context-pill {
       font-size: 10px;
       font-weight: 700;
-      background: #0a1322;
-      border: 1px dashed var(--brand-blue);
-      color: #7dd3fc;
+      background: #121214;
+      border: 1px dashed #3f3f46;
+      color: #ffffff;
       padding: 4px 8px;
       border-radius: 6px;
       display: inline-flex;
@@ -735,7 +739,7 @@
     }
 
     .sub-branch-box {
-      background: #080e1a;
+      background: #121214;
       border: 1px dashed var(--border-color);
       border-radius: var(--radius-sm);
       padding: 10px;
@@ -756,10 +760,13 @@
       font-weight: 800;
       line-height: 1.4;
       animation: fadeIn 0.15s ease;
+      background: #18181b;
+      border: 1px solid var(--border-color);
+      color: #ffffff;
     }
-    .verdict-green { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; }
-    .verdict-amber { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fde68a; }
-    .verdict-rose { background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.4); color: #fca5a5; }
+    .verdict-green { background: #18181b; border: 1px solid #3f3f46; color: #ffffff; }
+    .verdict-amber { background: #121214; border: 1px solid #27272a; color: #d4d4d8; }
+    .verdict-rose { background: #121214; border: 1px solid #27272a; color: #a1a1aa; }
 
     .chamber-nav-actions {
       display: flex;
@@ -770,8 +777,8 @@
       flex: 1;
       padding: 14px;
       border-radius: var(--radius-md);
-      background: linear-gradient(135deg, var(--brand-green), #059669);
-      color: #032117;
+      background: #ffffff;
+      color: #000000;
       font-size: 13px;
       font-weight: 900;
       letter-spacing: 0.5px;
@@ -781,8 +788,11 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 4px 16px var(--brand-green-glow);
+      box-shadow: none;
       transition: all 0.12s ease;
+    }
+    .btn-advance-set:hover {
+      background: #e4e4e7;
     }
     .btn-advance-set:disabled {
       opacity: 0.35;
@@ -794,26 +804,27 @@
     /* CELEBRATION RECAP */
     .celebration-box {
       background: var(--bg-card);
-      border: 1px solid rgba(16, 185, 129, 0.4);
+      border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
       padding: 24px 18px;
       text-align: center;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.15);
+      box-shadow: none;
     }
     .celebration-icon {
       width: 56px;
       height: 56px;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid var(--brand-green);
+      background: #18181b;
+      border: 1px solid #3f3f46;
       border-radius: 50%;
       margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 26px;
+      color: #ffffff;
     }
     .recap-list {
       background: var(--bg-card-sub);
@@ -832,21 +843,21 @@
       align-items: center;
       justify-content: space-between;
       padding: 8px;
-      border-bottom: 1px solid #1f2c42;
+      border-bottom: 1px solid #27272a;
       font-size: 12px;
     }
     .recap-item:last-child { border-bottom: none; }
 
     /* EXERCISE RECAP CARD */
     .exercise-recap-card {
-      background: #0f172a;
-      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
       border-radius: 20px;
       padding: 24px 20px;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(16, 185, 129, 0.1);
+      box-shadow: none;
     }
     .recap-outcome-banner {
       border-radius: 12px;
@@ -857,19 +868,19 @@
       letter-spacing: 0.3px;
     }
     .banner-green {
-      background: rgba(16, 185, 129, 0.18);
-      border: 1px solid #10b981;
-      color: #34d399;
+      background: #18181b;
+      border: 1px solid #52525b;
+      color: #ffffff;
     }
     .banner-cyan {
-      background: rgba(56, 189, 248, 0.18);
-      border: 1px solid #38bdf8;
-      color: #38bdf8;
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      color: #ffffff;
     }
     .banner-amber {
-      background: rgba(245, 158, 11, 0.18);
-      border: 1px solid #f59e0b;
-      color: #fbbf24;
+      background: #121214;
+      border: 1px solid #27272a;
+      color: #d4d4d8;
     }
     .recap-sets-grid {
       display: flex;
@@ -877,8 +888,8 @@
     }
     .recap-set-item {
       flex: 1;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
       padding: 10px 8px;
       text-align: center;
@@ -886,17 +897,17 @@
     .recap-set-item .set-lbl {
       font-size: 10px;
       font-weight: 800;
-      color: #94a3b8;
+      color: var(--text-sub);
       margin-bottom: 4px;
     }
     .recap-set-item .set-val {
       font-size: 13px;
       font-weight: 900;
-      color: #f8fafc;
+      color: #ffffff;
     }
     .overload-delta-box {
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px dashed rgba(16, 185, 129, 0.5);
+      background: var(--bg-card-sub);
+      border: 1px dashed var(--border-accent);
       border-radius: 14px;
       padding: 14px;
       display: flex;
@@ -1571,7 +1582,7 @@
       width: 100%;
       height: 6px;
       border-radius: 3px;
-      background: #1e293b;
+      background: #27272a;
       outline: none;
       cursor: pointer;
     }
@@ -1581,14 +1592,14 @@
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: var(--brand-green);
+      background: #ffffff;
       cursor: pointer;
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.7);
-      border: 2px solid #032117;
+      box-shadow: none;
+      border: 2px solid #000000;
       transition: transform 0.1s ease;
     }
     .proj-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.15);
+      transform: scale(1.12);
     }
     .proj-slider-presets {
       display: grid;
@@ -1609,8 +1620,8 @@
     }
     .proj-preset-btn:hover, .proj-preset-btn.active {
       background: var(--bg-elevated);
-      color: var(--brand-green);
-      border-color: var(--brand-green);
+      color: #ffffff;
+      border-color: var(--border-accent);
     }
     .proj-sim-readout {
       display: grid;
@@ -1644,8 +1655,8 @@
       color: #fff;
     }
     .proj-milestone-banner {
-      background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(56,189,248,0.08));
-      border: 1px solid rgba(16,185,129,0.35);
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border-color);
       border-radius: var(--radius-sm);
       padding: 10px 12px;
       display: flex;
@@ -1675,7 +1686,7 @@
   
     /* DPO PRESCRIBED REST TIMER */
     .rest-timer-box {
-      background: rgba(13, 21, 36, 0.85);
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
       padding: 8px 12px;
@@ -1686,12 +1697,12 @@
       margin-bottom: 2px;
     }
     .rest-timer-box.timer-running {
-      border-color: rgba(16, 185, 129, 0.45);
-      box-shadow: 0 0 14px rgba(16, 185, 129, 0.12);
+      border-color: #ffffff;
+      box-shadow: none;
     }
     .rest-timer-box.timer-done {
-      border-color: rgba(16, 185, 129, 0.8);
-      background: rgba(16, 185, 129, 0.12);
+      border-color: #3f3f46;
+      background: var(--bg-card-sub);
     }
     .rest-timer-info {
       display: flex;
@@ -1712,13 +1723,8 @@
       transition: all 0.2s ease;
     }
     .rest-pulse-dot.running {
-      background: var(--brand-green);
-      box-shadow: 0 0 8px var(--brand-green);
-      animation: restPulse 1.2s infinite;
-    }
-    @keyframes restPulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.4); opacity: 0.6; }
+      background: #ffffff;
+      box-shadow: none;
     }
     .rest-timer-label {
       font-size: 10px;
@@ -1863,7 +1869,7 @@
         </div>
       </div>
       <div class="header-actions">
-        <button id="btnTestIsland" class="btn" style="background:rgba(16, 185, 129, 0.15); border:1px solid #10b981; color:#6ee7b7; font-size:11px;" onclick="testDynamicIslandNow()" title="Test Dynamic Island Live Activity">
+        <button id="btnTestIsland" class="btn" style="background:#18181b; border:1px solid #3f3f46; color:#ffffff; font-size:11px;" onclick="testDynamicIslandNow()" title="Test Dynamic Island Live Activity">
           🏝️ Dynamic Island
         </button>
         <button id="btnToggleAudio" class="btn" title="Sound Effects" onclick="toggleMute()">
@@ -1918,28 +1924,77 @@
         </button>
       </div>
 
+      <!-- ROUTINE LAUNCHER CARD (Clear Starting Point for Workout Routine) -->
+      <div id="focusRoutineLauncherCard" class="focus-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="launcherSplitBadge" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46; font-size:11px; font-weight:800;">PUSH ROUTINE</span>
+            <span class="badge" style="background:#09090b; color:#10b981; border:1px solid #059669; font-size:11px; font-weight:800;">READY TO START</span>
+          </div>
+          <span style="font-size:11px; color:#a1a1aa; font-family:monospace;">DPO PERIODIZATION</span>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <h2 id="launcherRoutineTitle" style="font-size: 22px; font-weight: 900; color: #ffffff; margin: 0 0 6px 0;">Push Workout Routine</h2>
+          <p id="launcherRoutineSubtitle" style="font-size: 13px; color: #a1a1aa; margin: 0;">Prescribed neural warm-ups, working sets, and auto-transition rest</p>
+        </div>
+
+        <!-- Routine Telemetry Pills -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;">
+          <div style="background: #18181b; border: 1px solid #27272a; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #71717a; font-weight: 700; text-transform: uppercase;">Exercises</div>
+            <div id="launcherTotalExercises" style="font-size: 16px; font-weight: 900; color: #ffffff; margin-top: 2px;">5 Lifts</div>
+          </div>
+          <div style="background: #18181b; border: 1px solid #27272a; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #71717a; font-weight: 700; text-transform: uppercase;">Working Sets</div>
+            <div id="launcherTotalSets" style="font-size: 16px; font-weight: 900; color: #ffffff; margin-top: 2px;">15 Sets</div>
+          </div>
+          <div style="background: #18181b; border: 1px solid #27272a; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #71717a; font-weight: 700; text-transform: uppercase;">Est. Duration</div>
+            <div id="launcherEstDuration" style="font-size: 16px; font-weight: 900; color: #ffffff; margin-top: 2px;">~45 Min</div>
+          </div>
+        </div>
+
+        <!-- Routine Exercise Sequence Preview List -->
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 11px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Prescribed Lift Order & Warm-Up Ramp</div>
+          <div id="launcherExerciseList" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Big Start Routine Button -->
+        <button id="btnStartRoutineHero" class="btn btn-green" style="padding: 16px; font-size: 16px; font-weight: 900; width: 100%; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;" onclick="startFocusedWorkoutRoutine()">
+          <span>▶</span>
+          <span id="btnStartRoutineText">START PUSH WORKOUT</span>
+        </button>
+      </div>
+
       <!-- FOCUSED EXERCISE RUNNER CARD -->
-      <div id="focusActiveCard" class="focus-card">
+      <div id="focusActiveCard" class="focus-card hidden">
         
         <!-- Exercise Header & Live Status -->
         <div class="focus-top-meta">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span id="focusSplitBadge" class="badge" style="background:#064e3b; color:#6ee7b7;">PUSH</span>
+              <span id="focusSplitBadge" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46;">PUSH</span>
               <h2 id="focusExName" class="exercise-title">Barbell Bench Press</h2>
+              <span id="focusRepRangePill" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46; font-family:monospace; font-weight:800; font-size:11px;">8–12 REPS</span>
               
-              <button id="focusUnitBadgeBtn" onclick="toggleActiveExerciseUnit()" class="badge badge-lbs" title="Tap to convert units for this lift">
-                LBS ⇄ KG
-              </button>
-              <button id="focusTriggerRecalBtn" onclick="triggerManualRecalibration()" class="badge" style="background:rgba(245,158,11,0.18); color:#fbbf24; border:1px solid rgba(245,158,11,0.4); cursor:pointer;" title="Trigger DPO Periodic Recalibration on next set">
+              <button id="focusUnitBadgeBtn" onclick="toggleActiveExerciseUnit()"><span class="badge badge-lbs" title="Tap to convert units for this lift">LBS ⇄ KG</span></button>
+              <button id="focusTriggerRecalBtn" onclick="triggerManualRecalibration()" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46; cursor:pointer;" title="Trigger DPO Periodic Recalibration on next set">
                 🔬 Recalibrate
               </button>
-              <button id="focusCalibrateBtn" onclick="openCalibrationModal()" class="badge" style="background:rgba(56,189,248,0.18); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); cursor:pointer;" title="Run 2-Set DPO Calibration">
+              <button id="focusResetRecalBtn" onclick="resetCurrentExerciseRecalCount()" class="badge" style="background:#18181b; color:#a1a1aa; border:1px solid #3f3f46; cursor:pointer; display:none;" title="Reset Recalibration Countdown to 0">
+                ↺ Reset Recal
+              </button>
+              <button id="focusCalibrateBtn" onclick="openCalibrationModal()" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46; cursor:pointer;" title="Run 2-Set DPO Calibration">
                 🎯 Calibrate
               </button>
-              <button id="focusWarmupBtn" onclick="toggleWarmupDrawer()" class="badge" style="background:rgba(245,158,11,0.18); color:#fbbf24; border:1px solid rgba(245,158,11,0.4); cursor:pointer;" title="Toggle DPO Warm-Up Protocol">
+              <button id="focusWarmupBtn" onclick="toggleWarmupDrawer()" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46; cursor:pointer;" title="Toggle DPO Warm-Up Protocol">
                 🔥 Warm-Up
               </button>
+              <button class="btn" onclick="exitWorkoutRoutineToLauncher()" style="font-size: 11px; padding: 4px 8px; border-radius: 6px; background: #27272a; color: #a1a1aa; border: 1px solid #3f3f46; cursor: pointer;" title="Exit Routine">✕ Exit</button>
             </div>
             <p id="focusExMeta" class="exercise-subtext">Weight: 185 lbs • Inc: +5 lbs • Set 1 Streak: 0/2</p>
           </div>
@@ -1996,6 +2051,36 @@
           </div>
         </div>
 
+        <!-- ACTIVE WARM-UP STAGE CARD (Prescribed Warm-Ups Logged First) -->
+        <div id="focusWarmupChamberCard" class="single-set-chamber hidden" style="border: 1px solid rgba(245, 158, 11, 0.4); background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(24, 24, 27, 0.95) 100%);">
+          <div class="chamber-header">
+            <div class="set-hero-tag">
+              <div class="set-hero-number" style="background: #f59e0b; color: #000000; font-weight: 900;">🔥</div>
+              <span id="warmupHeroTitle" class="set-hero-title" style="color: #fbbf24;">WARM-UP 1 of 3</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span id="warmupPctBadge" class="badge" style="background:#18181b; color:#fbbf24; border:1px solid rgba(245, 158, 11, 0.5); font-family:monospace; font-weight:800; font-size:11px;">50% LOAD</span>
+              <span id="warmupWeightBadge" class="chamber-weight-badge" style="border-color: rgba(245, 158, 11, 0.5); color: #fbbf24;">90 LBS</span>
+            </div>
+          </div>
+
+          <div style="margin: 12px 0 16px 0; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; text-align: center;">
+            <div style="font-size: 10.5px; font-weight: 800; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.5px;">PRESCRIBED NEURAL WARM-UP RAMP</div>
+            <div id="warmupPrescribedTargetText" style="font-size: 22px; font-weight: 900; color: #ffffff; font-family: monospace; margin: 4px 0 2px 0;">10 REPS @ 90 LBS</div>
+            <div id="warmupReasonSubtext" style="font-size: 11.5px; color: #d4d4d8; margin-top: 4px;">Neural potentiation & motor pattern groove (≥4 RIR)</div>
+          </div>
+
+          <!-- Warmup Completion CTA Buttons -->
+          <div style="display: flex; gap: 8px;">
+            <button id="btnCompleteWarmup" class="btn btn-green" style="flex: 2; padding: 14px; font-size: 15px; font-weight: 900; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;" onclick="completeCurrentWarmupSet()">
+              <span>✓ Complete Warm-Up <span id="btnCompleteWarmupNum">1</span></span>
+            </button>
+            <button id="btnSkipWarmup" class="btn" style="flex: 1; padding: 14px; font-size: 12px; font-weight: 800; border-radius: 10px; background: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; cursor: pointer;" onclick="skipWarmupsAndStartWorkingSets()">
+              <span>Skip to Set 1 ⏭</span>
+            </button>
+          </div>
+        </div>
+
         <!-- CHAMBER 1: SET 1 (Shown alone when activeSetIndex === 1) -->
         <div id="chamberSet1" class="single-set-chamber">
           <div class="chamber-header">
@@ -2003,7 +2088,10 @@
               <div class="set-hero-number">1</div>
               <span id="c1_heroTitle" class="set-hero-title">SET 1 of 3</span>
             </div>
-            <span id="c1_weightBadge" class="chamber-weight-badge">185 lbs</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span id="c1_repRangeBadge" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46; font-family:monospace; font-weight:800; font-size:11px;">8–12 REPS</span>
+              <span id="c1_weightBadge" class="chamber-weight-badge">185 lbs</span>
+            </div>
           </div>
 
           <!-- ASSISTED / MIN LIMIT BANNER (CHAMBER 1) -->
@@ -2090,7 +2178,10 @@
               <div class="set-hero-number">2</div>
               <span id="c2_heroTitle" class="set-hero-title">SET 2 of 3</span>
             </div>
-            <span id="c2_weightBadge" class="chamber-weight-badge">185 lbs</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span id="c2_repRangeBadge" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46; font-family:monospace; font-weight:800; font-size:11px;">8–12 REPS</span>
+              <span id="c2_weightBadge" class="chamber-weight-badge">185 lbs</span>
+            </div>
           </div>
 
           <!-- CHAMBER 2 SET LOGGING TRIAGE (FULL-SIZED DYNAMIC ISLAND MATCH) -->
@@ -2135,7 +2226,10 @@
               <div class="set-hero-number">3</div>
               <span class="set-hero-title">SET 3 of 3 (Final Set)</span>
             </div>
-            <span id="c3_weightBadge" class="chamber-weight-badge">185 lbs</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span id="c3_repRangeBadge" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46; font-family:monospace; font-weight:800; font-size:11px;">8–12 REPS</span>
+              <span id="c3_weightBadge" class="chamber-weight-badge">185 lbs</span>
+            </div>
           </div>
 
           <!-- SET 3 MIN LIMIT ALERT -->
@@ -2240,6 +2334,34 @@
         </button>
       </div>
 
+      <!-- INTER-EXERCISE TRANSITION REST CARD (Automatic Rest Between Lifts) -->
+      <div id="focusTransitionRestCard" class="focus-card hidden" style="border: 1px solid rgba(245, 158, 11, 0.4); background: #09090b; text-align: center; padding: 24px 18px;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px;">
+          <span style="font-size: 14px;">⏱️</span>
+          <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px; font-weight: 800;">INTER-EXERCISE RECOVERY</span>
+        </div>
+
+        <h2 style="font-size: 20px; font-weight: 900; color: #ffffff; margin: 0 0 4px 0;">Catch Your Breath & Reset</h2>
+        <p style="font-size: 12px; color: #a1a1aa; margin: 0 0 16px 0;">Rest timer starts automatically between exercises</p>
+
+        <!-- Live Countdown Digits -->
+        <div style="background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+          <div id="transitionRestDigits" style="font-size: 44px; font-weight: 900; color: #f59e0b; font-family: monospace; letter-spacing: 2px;">02:00</div>
+          <div style="font-size: 11px; color: #71717a; text-transform: uppercase; font-weight: 700; margin-top: 4px;">Transition Rest Interval</div>
+        </div>
+
+        <!-- Next Exercise Teaser -->
+        <div style="background: #18181b; border: 1px solid #27272a; border-radius: 10px; padding: 12px; margin-bottom: 18px; text-align: left;">
+          <div style="font-size: 10px; font-weight: 800; color: #71717a; text-transform: uppercase;">Up Next in Routine</div>
+          <div id="transitionNextExerciseTitle" style="font-size: 16px; font-weight: 900; color: #ffffff; margin-top: 2px;">Barbell Bench Press</div>
+          <div id="transitionNextExerciseMeta" style="font-size: 12px; color: #a1a1aa; margin-top: 2px;">Chest • Heavy Compound (Warm-Ups Prescribed)</div>
+        </div>
+
+        <button id="btnSkipTransitionRest" class="btn btn-green" style="padding: 14px; font-size: 15px; font-weight: 900; width: 100%; border-radius: 10px; cursor: pointer;" onclick="skipTransitionRestNow()">
+          Ready to Start Lift Now ›
+        </button>
+      </div>
+
       <!-- CELEBRATION RECAP (Shown when split is finished) -->
       <div id="focusCelebrationCard" class="celebration-box hidden">
         <div class="celebration-icon">🏆</div>
@@ -2318,12 +2440,15 @@
             Visualizing Estimated 1RM capacity, Fatigue Index decay, and 5-session periodic recalibration tests.
           </p>
         </div>
-        <div style="display:flex; gap:6px;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button type="button" class="btn btn-green" style="padding: 7px 12px; font-size: 11px;" onclick="openSelectedCalibrationModal()">
             🎯 Run 2-Set Calibration
           </button>
           <button type="button" class="btn btn-blue-outline" style="padding: 7px 10px; font-size: 11px;" onclick="flagActiveLiftForRecalibration()" title="Flag currently inspected lift for failure test on next workout">
             🔬 Flag for Recal
+          </button>
+          <button type="button" class="btn btn-rose-outline" style="padding: 7px 10px; font-size: 11px;" onclick="openCalibrationResetModal()" title="Reset calibrations or recalibration counts">
+            ↺ Reset Hub
           </button>
         </div>
       </div>
@@ -2353,17 +2478,17 @@
       </div>
 
       <!-- Interactive Inspector Card (Deep Dive on Selected Lift) -->
-      <div class="calib-card" style="border: 1px solid rgba(56, 189, 248, 0.3); background: linear-gradient(180deg, rgba(13,21,36,0.95) 0%, rgba(9,15,26,0.95) 100%);">
+      <div class="calib-card" style="border: 1px solid var(--border-color); background: var(--bg-card);">
         
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:18px;">🔬</span>
             <div>
               <div style="display:flex; align-items:center; gap:6px;">
-                <span id="calibInspSplitBadge" class="badge" style="background:#064e3b; color:#6ee7b7;">PUSH</span>
-                <span id="calibInspStatusBadge" class="badge" style="background:rgba(56,189,248,0.2); color:#7dd3fc;">✓ Calibrated</span>
+                <span id="calibInspSplitBadge" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46;">PUSH</span>
+                <span id="calibInspStatusBadge" class="badge" style="background:#18181b; color:#ffffff; border:1px solid #3f3f46;">✓ Calibrated</span>
               </div>
-              <h2 id="calibInspTitle" style="font-size:17px; font-weight:900; margin-top:3px; color:#fff;">Smith Machine Incline Bench Press</h2>
+              <h2 id="calibInspTitle" style="font-size:17px; font-weight:900; margin-top:3px; color:#ffffff;">Smith Machine Incline Bench Press</h2>
             </div>
           </div>
           
@@ -2375,12 +2500,12 @@
         </div>
 
         <!-- 3-Set Cascade Visualizer & Consolidation Thresholds -->
-        <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:14px; display:flex; flex-direction:column; gap:10px;">
+        <div style="background:var(--bg-card-sub); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:14px; display:flex; flex-direction:column; gap:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:11px; font-weight:800; color:#bae6fd; text-transform:uppercase; letter-spacing:0.5px;">
+            <span style="font-size:11px; font-weight:800; color:#d4d4d8; text-transform:uppercase; letter-spacing:0.5px;">
               3-Set Load Cascade & Consolidation Gates
             </span>
-            <span id="calibInspE1RM" style="font-size:11px; font-family:monospace; color:#34d399; font-weight:800;">
+            <span id="calibInspE1RM" style="font-size:11px; font-family:monospace; color:#ffffff; font-weight:800;">
               e1RM: 28.3 lbs
             </span>
           </div>
@@ -2389,57 +2514,62 @@
             <!-- Set 1 (Anchor) -->
             <div class="cascade-bar-row">
               <div class="cascade-bar-header">
-                <span style="color:#6ee7b7;">SET 1 (Anchor Load • 100%)</span>
-                <span id="calibInspS1Load" style="font-family:monospace; color:#fff;">20.0 lbs</span>
+                <span style="color:#ffffff;">SET 1 (Anchor Load • 100%)</span>
+                <span id="calibInspS1Load" style="font-family:monospace; color:#ffffff;">20.0 lbs</span>
               </div>
               <div class="cascade-bar-track">
-                <div id="calibInspS1Fill" class="cascade-bar-fill" style="width: 100%; background: linear-gradient(90deg, #059669, #10b981);"></div>
+                <div id="calibInspS1Fill" class="cascade-bar-fill" style="width: 100%; background: #ffffff;"></div>
               </div>
             </div>
 
             <!-- Set 2 (Foundation Volume) -->
             <div class="cascade-bar-row">
               <div class="cascade-bar-header">
-                <span style="color:#38bdf8;">SET 2 (Volume • Gate ≥ 85%)</span>
-                <span id="calibInspS2Load" style="font-family:monospace; color:#fff;">17.5 lbs (87.5%)</span>
+                <span style="color:#d4d4d8;">SET 2 (Volume • Gate ≥ 85%)</span>
+                <span id="calibInspS2Load" style="font-family:monospace; color:#ffffff;">17.5 lbs (87.5%)</span>
               </div>
               <div class="cascade-bar-track" style="position:relative;">
                 <div class="cascade-threshold-line" style="left:85%;" title="85% Breakthrough Gate"></div>
-                <div id="calibInspS2Fill" class="cascade-bar-fill" style="width: 87.5%; background: linear-gradient(90deg, #0284c7, #38bdf8);"></div>
+                <div id="calibInspS2Fill" class="cascade-bar-fill" style="width: 87.5%; background: #a1a1aa;"></div>
               </div>
             </div>
 
             <!-- Set 3 (Hypertrophy Burnout) -->
             <div class="cascade-bar-row">
               <div class="cascade-bar-header">
-                <span style="color:#f59e0b;">SET 3 (Burnout • Gate ≥ 65%)</span>
-                <span id="calibInspS3Load" style="font-family:monospace; color:#fff;">12.5 lbs (62.5%)</span>
+                <span style="color:#a1a1aa;">SET 3 (Burnout • Gate ≥ 65%)</span>
+                <span id="calibInspS3Load" style="font-family:monospace; color:#ffffff;">12.5 lbs (62.5%)</span>
               </div>
               <div class="cascade-bar-track" style="position:relative;">
                 <div class="cascade-threshold-line" style="left:65%;" title="65% Breakthrough Gate"></div>
-                <div id="calibInspS3Fill" class="cascade-bar-fill" style="width: 62.5%; background: linear-gradient(90deg, #d97706, #f59e0b);"></div>
+                <div id="calibInspS3Fill" class="cascade-bar-fill" style="width: 62.5%; background: #71717a;"></div>
               </div>
             </div>
           </div>
 
           <!-- Consolidation & Coupling Status Note -->
-          <div id="calibInspStatusNote" style="font-size:11px; color:#bae6fd; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.25); border-radius:var(--radius-sm); padding:8px 10px; line-height:1.4;">
+          <div id="calibInspStatusNote" style="font-size:11px; color:#d4d4d8; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:8px 10px; line-height:1.4;">
             <!-- Filled dynamically -->
           </div>
         </div>
 
         <!-- Dynamic Recalibration Countdown Meter (5 Sessions) -->
         <div style="background:rgba(0,0,0,0.25); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:12px; display:flex; flex-direction:column; gap:8px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
             <div style="display:flex; align-items:center; gap:6px;">
               <span style="font-size:13px;">⏱️</span>
               <span style="font-size:11px; font-weight:800; color:#fff; text-transform:uppercase;">
                 Periodic Recalibration Countdown
               </span>
             </div>
-            <span id="calibInspRecalCountdownText" style="font-size:11px; font-weight:800; font-family:monospace; color:#fbbf24;">
-              Session 1 of 5 (4 to go)
-            </span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span id="calibInspRecalCountdownText" style="font-size:11px; font-weight:800; font-family:monospace; color:#fbbf24;">
+                Session 1 of 5 (4 to go)
+              </span>
+              <button type="button" id="calibInspResetRecalBtn" class="btn btn-amber-outline" style="padding:2px 7px; font-size:9.5px; border-radius:4px;" onclick="resetSelectedLiftRecalCount()" title="Reset recalibration countdown to 0/5 for this lift">
+                ↺ Reset Count
+              </button>
+            </div>
           </div>
 
           <div id="calibInspStepDots" class="calib-step-tracker">
@@ -2453,14 +2583,17 @@
 
         <!-- Action Row -->
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-green" style="flex:1; padding:9px; font-weight:800;" onclick="openSelectedCalibrationModal()">
+          <button type="button" class="btn btn-green" style="flex:1; min-width:140px; padding:9px; font-weight:800;" onclick="openSelectedCalibrationModal()">
             🎯 Re-Calibrate (2-Set Protocol)
           </button>
-          <button type="button" class="btn btn-blue-outline" style="flex:1; padding:9px;" onclick="flagActiveLiftForRecalibration()">
+          <button type="button" class="btn btn-blue-outline" style="flex:1; min-width:140px; padding:9px;" onclick="flagActiveLiftForRecalibration()">
             🔬 Trigger Failure Recalibration
           </button>
-          <button type="button" class="btn btn-rose-outline" style="padding:9px 12px;" onclick="resetSelectedLiftCalibration()">
-            ↺ Reset
+          <button type="button" class="btn btn-amber-outline" style="padding:9px 12px; font-weight:700;" onclick="resetSelectedLiftRecalCount()" title="Reset recalibration count to 0/5">
+            ↺ Reset Count
+          </button>
+          <button type="button" class="btn btn-rose-outline" style="padding:9px 12px; font-weight:700;" onclick="resetSelectedLiftCalibration()" title="Clear calibration and revert to uncalibrated">
+            ↺ Reset Calib
           </button>
         </div>
 
@@ -3481,7 +3614,16 @@
             <div id="editExCalibStatusLabel" style="font-size: 10px; color: var(--text-sub);">Calibrated</div>
           </div>
           <button type="button" id="btnEditResetCalib" class="btn btn-rose-outline" style="padding: 4px 8px; font-size: 11px;" onclick="resetCurrentExerciseCalibration()">
-            ↺ Reset
+            ↺ Reset Calib
+          </button>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card-sub); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: #fff;">Recalibration Count</div>
+            <div id="editExRecalStatusLabel" style="font-size: 10px; color: #fbbf24;">0 of 5 Sessions</div>
+          </div>
+          <button type="button" id="btnEditResetRecal" class="btn btn-amber-outline" style="padding: 4px 8px; font-size: 11px;" onclick="resetCurrentExerciseRecalCount()">
+            ↺ Reset Count
           </button>
         </div>
         <button type="button" class="btn" style="background: rgba(56,189,248,0.15); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.4); width: 100%; justify-content: center; padding: 9px; font-weight: 800; font-size: 12px;" onclick="openCalibrationModalFromEdit()">
@@ -3517,9 +3659,14 @@
           <strong id="calibExerciseName" style="color: #fff; font-size: 13px;">Exercise</strong>
           <span id="calibCurrentStatusBadge" class="badge" style="font-size: 10px;">Calibrated</span>
         </div>
-        <button type="button" id="btnCalibResetTop" class="btn btn-rose-outline" style="padding: 4px 8px; font-size: 11px;" onclick="resetCurrentExerciseCalibration()" title="Clear calibration and mark as uncalibrated">
-          ↺ Reset Calibration
-        </button>
+        <div style="display: flex; gap: 6px;">
+          <button type="button" id="btnCalibResetRecalTop" class="btn btn-amber-outline" style="padding: 4px 8px; font-size: 11px;" onclick="resetCurrentExerciseRecalCount()" title="Reset recalibration countdown to 0/5">
+            ↺ Reset Count
+          </button>
+          <button type="button" id="btnCalibResetTop" class="btn btn-rose-outline" style="padding: 4px 8px; font-size: 11px;" onclick="resetCurrentExerciseCalibration()" title="Clear calibration and mark as uncalibrated">
+            ↺ Reset Calibration
+          </button>
+        </div>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
@@ -3581,6 +3728,72 @@
     </div>
   </div>
 
+  <!-- MODAL: CALIBRATION & RECALIBRATION RESET HUB -->
+  <div id="modalCalibrationReset" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:18px;">↺</span>
+          <h3 style="color:#fda4af;">Calibration & Recalibration Resets</h3>
+        </div>
+        <button class="btn" style="padding: 4px 8px;" onclick="closeModal('modalCalibrationReset')">✕</button>
+      </div>
+      <p style="font-size: 11px; color: var(--text-sub); line-height: 1.4;">
+        Manage or reset calibration baselines (e1RM, Fatigue Index) and the 5-session periodic recalibration counters:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+        <!-- Option 1: Reset Recal Count for Active Lift -->
+        <div style="background: var(--bg-card-sub); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 800; color: #fff;">Selected Lift: Recalibration Count</div>
+            <div style="font-size: 10px; color: var(--text-sub);">Resets session countdown to 0/5 for the currently inspected lift without clearing calibration.</div>
+          </div>
+          <button type="button" class="btn btn-amber-outline" style="padding: 6px 10px; font-size: 11px; white-space: nowrap; font-weight: 700;" onclick="resetSelectedLiftRecalCount(); closeModal('modalCalibrationReset');">
+            ↺ Reset Count
+          </button>
+        </div>
+
+        <!-- Option 2: Reset Calibration for Active Lift -->
+        <div style="background: var(--bg-card-sub); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 800; color: #fff;">Selected Lift: Full Calibration</div>
+            <div style="font-size: 10px; color: var(--text-sub);">Reverts active lift to Uncalibrated (clears e1RM, Fatigue Index, and recalibration status).</div>
+          </div>
+          <button type="button" class="btn btn-rose-outline" style="padding: 6px 10px; font-size: 11px; white-space: nowrap; font-weight: 700;" onclick="resetSelectedLiftCalibration(); closeModal('modalCalibrationReset');">
+            ↺ Reset Calib
+          </button>
+        </div>
+
+        <!-- Option 3: Reset Recal Counts for ALL Lifts -->
+        <div style="background: var(--bg-card-sub); border: 1px solid rgba(245,158,11,0.3); border-radius: var(--radius-sm); padding: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 800; color: #fbbf24;">Fleet: All Recalibration Counts</div>
+            <div style="font-size: 10px; color: var(--text-sub);">Resets 5-session periodic recalibration counters to 0/5 across all lifts. Calibrations are kept intact.</div>
+          </div>
+          <button type="button" class="btn btn-amber-outline" style="padding: 6px 10px; font-size: 11px; white-space: nowrap; font-weight: 700;" onclick="resetAllRecalibrationCounts(); closeModal('modalCalibrationReset');">
+            ↺ Reset All Counts
+          </button>
+        </div>
+
+        <!-- Option 4: Reset All Calibrations for Fleet -->
+        <div style="background: var(--bg-card-sub); border: 1px solid rgba(244,63,94,0.3); border-radius: var(--radius-sm); padding: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 800; color: #fda4af;">Fleet: All Lift Calibrations</div>
+            <div style="font-size: 10px; color: var(--text-sub);">Reverts ALL exercises in your library to Uncalibrated (clears e1RM, FI, and recalibration tests).</div>
+          </div>
+          <button type="button" class="btn btn-rose-outline" style="padding: 6px 10px; font-size: 11px; white-space: nowrap; font-weight: 700;" onclick="resetAllCalibrations(); closeModal('modalCalibrationReset');">
+            ↺ Reset All Calibs
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 12px;">
+        <button class="btn" style="width: 100%;" onclick="closeModal('modalCalibrationReset')">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: GRANULAR RESET MANAGER -->
   <div id="modalResetManager" class="modal-backdrop">
     <div class="modal-card">
@@ -3607,11 +3820,35 @@
           </div>
         </label>
 
-                <label class="reset-option">
+        <label class="reset-option">
+          <input type="checkbox" id="chkResetRecalCount">
+          <div>
+            <span class="reset-label-title">Reset Recalibration Count (Active Lift)</span>
+            <span class="reset-label-sub">Resets 5-session periodic recalibration countdown to 0/5 without losing calibration.</span>
+          </div>
+        </label>
+
+        <label class="reset-option">
           <input type="checkbox" id="chkResetCalibration">
           <div>
-            <span class="reset-label-title">Reset Lift Calibration</span>
+            <span class="reset-label-title">Reset Lift Calibration (Active Lift)</span>
             <span class="reset-label-sub">Reverts active lift to uncalibrated (isCalibrated = false, FI = 0.0, resets recalibration count).</span>
+          </div>
+        </label>
+
+        <label class="reset-option">
+          <input type="checkbox" id="chkResetAllRecal">
+          <div>
+            <span class="reset-label-title">Reset All Recalibration Counts (Fleet)</span>
+            <span class="reset-label-sub">Resets 5-session periodic recalibration countdown to 0/5 across all exercises.</span>
+          </div>
+        </label>
+
+        <label class="reset-option">
+          <input type="checkbox" id="chkResetAllCalib">
+          <div>
+            <span class="reset-label-title">Reset All Calibrations (Fleet)</span>
+            <span class="reset-label-sub">Reverts all exercises across your library to uncalibrated.</span>
           </div>
         </label>
 
@@ -3775,37 +4012,80 @@
 
           const sNum = (typeof activeSetIndex !== 'undefined') ? activeSetIndex : 1;
           const totalS = ex.activeSetsCount || (ex.targetSets || 3);
-          const unit = ex.unit || 'LBS';
+          const unit = (ex.unit || 'LBS').toUpperCase();
           let weightVal = '';
-          if (ex.loads && ex.loads[sNum - 1] !== undefined) {
+
+          // Determine current set's prescribed load
+          if (sNum === 3 && typeof s2Eval !== 'undefined' && s2Eval && s2Eval.set3Params && s2Eval.set3Params.prescribedLoad) {
+            weightVal = `${s2Eval.set3Params.prescribedLoad} ${unit}`;
+          } else if (ex.loads && ex.loads[sNum - 1] !== undefined) {
             weightVal = `${ex.loads[sNum - 1]} ${unit}`;
           } else if (ex.weight) {
             weightVal = `${ex.weight} ${unit}`;
           }
+          if (ex.isAssisted && !weightVal.includes('Assist')) {
+            weightVal = `${weightVal} Assist`;
+          }
 
-          const targetReps = ex.repsTarget || (sNum === 1 ? '6-8' : (sNum === 2 ? '8-11' : '8-12'));
+          const rMin = ex.repWindowMin || (sNum === 1 ? 6 : 8);
+          const rMax = ex.repWindowMax || (sNum === 1 ? 8 : 12);
           const split = (typeof focusedSplit !== 'undefined') ? focusedSplit : (ex.split || 'PUSH');
-          const inc = ex.microIncrement || 5;
+          const inc = ex.microIncrement || ex.increment || 2.5;
 
           const isRest = options.isResting !== undefined ? options.isResting : (typeof restTimerRunning !== 'undefined' ? restTimerRunning : false);
           const restDuration = options.restDuration !== undefined ? options.restDuration : (typeof restTimerRemaining !== 'undefined' ? restTimerRemaining : 0);
           const isTriage = options.isTriageLogging !== undefined ? options.isTriageLogging : false;
 
+          // Compute accurate DPO rep target descriptions for current set
+          const targetRepsDesc = sNum === 1
+            ? `${rMin}-${rMax} Reps (Anchor)`
+            : (sNum === 2 ? `${rMin}-${rMax} Reps (Driver)` : `${rMin}-${rMax} Reps (Volume)`);
+
+          const underTargetLabel = `< ${rMin} Missed`;
+          const prescribedLabel = `${rMin}-${rMax - 1} Target`;
+          const overloadLabel = `${rMax}+ Overload`;
+          const overloadIncLabel = ex.isAssisted ? `-1 Pin Assist` : `+${inc} ${unit} Next`;
+
+          const isWarm = options.isWarmup !== undefined ? options.isWarmup : (typeof isWarmupMode !== 'undefined' ? isWarmupMode : false);
+          const wIdx = options.warmupIndex !== undefined ? options.warmupIndex : (typeof currentWarmupIndex !== 'undefined' ? currentWarmupIndex : 1);
+          const totalW = options.totalWarmups !== undefined ? options.totalWarmups : (typeof currentTotalWarmups !== 'undefined' ? currentTotalWarmups : 0);
+          const wTargetText = options.warmupTargetText !== undefined ? options.warmupTargetText : (typeof currentWarmupTargetText !== 'undefined' ? currentWarmupTargetText : '');
+          const isTransRest = options.isTransitionRest !== undefined ? options.isTransitionRest : (typeof isTransitionRestMode !== 'undefined' ? isTransitionRestMode : false);
+          const nextExName = options.nextExerciseName !== undefined ? options.nextExerciseName : (typeof transitionNextExName !== 'undefined' ? transitionNextExName : '');
+
           const payload = {
             splitName: split,
-            exerciseName: ex.name || 'Workout Exercise',
+            exerciseName: isTransRest ? (nextExName || 'Next Lift') : (ex.name || 'Workout Exercise'),
             setIndex: sNum,
             totalSets: totalS,
-            loadText: weightVal,
-            targetRepsText: `${targetReps} Reps`,
+            loadText: isWarm ? (options.loadText || (typeof currentWarmupLoadText !== 'undefined' && currentWarmupLoadText ? currentWarmupLoadText : weightVal)) : (options.loadText || weightVal),
+            targetRepsText: isWarm ? (options.targetRepsText || (typeof currentWarmupRepsText !== 'undefined' && currentWarmupRepsText ? currentWarmupRepsText : targetRepsDesc)) : (options.targetRepsText || targetRepsDesc),
             isResting: isRest,
             restDuration: restDuration,
             isTriageLogging: isTriage,
-            underTargetText: '< 8 Missed',
-            prescribedTargetText: '8-11 Target',
-            overloadTargetText: '12+ Overload',
-            overloadIncrementText: `+${inc} ${unit} Next`
+            underTargetText: underTargetLabel,
+            prescribedTargetText: prescribedLabel,
+            overloadTargetText: overloadLabel,
+            overloadIncrementText: overloadIncLabel,
+            isRecap: options.isRecap || false,
+            recapLoggedSetsText: options.recapLoggedSetsText || '',
+            recapProgressionHeadline: options.recapProgressionHeadline || '',
+            recapNextTargetText: options.recapNextTargetText || '',
+            recapIsFinalExercise: options.recapIsFinalExercise || false,
+            isWarmup: isWarm,
+            warmupIndex: wIdx,
+            totalWarmups: totalW,
+            warmupTargetText: wTargetText,
+            isTransitionRest: isTransRest,
+            nextExerciseName: nextExName
           };
+
+          const payloadStr = JSON.stringify(payload);
+          if (this._lastPayloadStr === payloadStr && (Date.now() - (this._lastSyncTime || 0)) < 400) {
+            return;
+          }
+          this._lastPayloadStr = payloadStr;
+          this._lastSyncTime = Date.now();
 
           const plugin = getLiveActivityPlugin();
           if (plugin) {
@@ -3833,21 +4113,59 @@
     };
 
     window.handleLiveActivityAction = function(action, params) {
-      console.log('[LiveActivityBridge] Action received from Dynamic Island:', action, params);
+      console.log('[LiveActivityBridge] Action received from Dynamic Island/Widget:', action, params);
       try {
-        if (action === 'skip-rest') {
+        if (action === 'log-warmup') {
+          if (typeof completeCurrentWarmupSet === 'function') {
+            completeCurrentWarmupSet();
+            return;
+          }
+        } else if (action === 'skip-warmup') {
+          if (typeof skipWarmupsAndStartWorkingSets === 'function') {
+            skipWarmupsAndStartWorkingSets();
+            return;
+          }
+        } else if (action === 'continue-next-exercise' || action === 'advance-exercise') {
+          if (typeof advanceToNextExerciseAfterRecap === 'function') {
+            advanceToNextExerciseAfterRecap();
+            return;
+          }
+        } else if (action === 'skip-rest') {
+          if (typeof isTransitionRestMode !== 'undefined' && isTransitionRestMode) {
+            if (typeof skipTransitionRestNow === 'function') {
+              skipTransitionRestNow();
+              return;
+            }
+          }
+          if (typeof isWarmupMode !== 'undefined' && isWarmupMode && typeof restTimerRunning !== 'undefined' && restTimerRunning) {
+            if (typeof stopRestTimer === 'function') stopRestTimer(false);
+            if (typeof advanceWarmupAfterRest === 'function') {
+              advanceWarmupAfterRest();
+              return;
+            }
+          }
           if (typeof stopRestTimer === 'function') stopRestTimer(false);
-          if (typeof LiveActivityBridge !== 'undefined') {
-            LiveActivityBridge.syncCurrentWorkoutState({ isResting: false, isTriageLogging: true });
+          const recapCard = document.getElementById('focusSingleExerciseRecapCard');
+          if (recapCard && !recapCard.classList.contains('hidden')) {
+            if (typeof advanceToNextExerciseAfterRecap === 'function') {
+              advanceToNextExerciseAfterRecap();
+              return;
+            }
           }
         } else if (action === 'adjust-timer') {
           const delta = parseInt(params?.delta || '0', 10);
           if (delta && typeof adjustRestTimer === 'function') {
             adjustRestTimer(delta);
-            LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: typeof restTimerRemaining !== 'undefined' ? restTimerRemaining : 0 });
           }
         } else if (action === 'log-triage') {
           const outcome = params?.outcome || 'target';
+          const recapCard = document.getElementById('focusSingleExerciseRecapCard');
+          if (recapCard && !recapCard.classList.contains('hidden')) {
+            if (typeof advanceToNextExerciseAfterRecap === 'function') {
+              advanceToNextExerciseAfterRecap();
+              return;
+            }
+          }
           if (typeof activeSetIndex !== 'undefined') {
             if (activeSetIndex === 1 && typeof handleChamberS1Triage === 'function') {
               handleChamberS1Triage(outcome);
@@ -3858,21 +4176,37 @@
               const numSets = (ex && ex.activeSetsCount) ? ex.activeSetsCount : 3;
               if (numSets > 2 && typeof goToSet === 'function') {
                 goToSet(3);
-              } else if (typeof completeFocusedExercise === 'function') {
-                completeFocusedExercise();
+              } else if (typeof commitAndAdvanceExercise === 'function') {
+                commitAndAdvanceExercise();
               }
             } else if (activeSetIndex === 3 && typeof handleChamberS3Triage === 'function') {
               handleChamberS3Triage(outcome);
-              if (typeof completeFocusedExercise === 'function') {
-                completeFocusedExercise();
+              if (typeof commitAndAdvanceExercise === 'function') {
+                commitAndAdvanceExercise();
               }
             }
+          }
+        } else if (action === 'enter-exact') {
+          if (typeof switchMainView === 'function') {
+            switchMainView('focused');
+          }
+          const sIdx = (typeof activeSetIndex !== 'undefined') ? activeSetIndex : 1;
+          const chamberEl = document.getElementById(`stepChamber${sIdx}`);
+          if (chamberEl) {
+            chamberEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         }
       } catch (e) {
         console.error('[LiveActivityBridge] Error handling action:', e);
       }
     };
+
+    // Replay any actions received before bridge was loaded
+    if (Array.isArray(window.__pendingLiveActivityActions) && window.__pendingLiveActivityActions.length > 0) {
+      const pending = [...window.__pendingLiveActivityActions];
+      window.__pendingLiveActivityActions = [];
+      pending.forEach(item => window.handleLiveActivityAction(item.action, item.params));
+    }
 
     function testDynamicIslandNow() {
       playTone(580);
@@ -5157,6 +5491,21 @@
     let activeSetIndex = 1;
     let focusedSessionLog = [];
 
+    // Workout Routine Lifecycle & Warmup Progression State
+    let isRoutineSessionActive = false;
+    let isWarmupMode = false;
+    let currentWarmupIndex = 1;
+    let currentTotalWarmups = 0;
+    let currentWarmupPrescription = null;
+    let currentWarmupTargetText = '';
+    let currentWarmupLoadText = '';
+    let currentWarmupRepsText = '';
+    let warmupsSkippedForExercise = {};
+    let isTransitionRestMode = false;
+    let transitionNextExName = '';
+    let transitionRestRemaining = 120;
+    let transitionRestInterval = null;
+
     let addModalUnit = 'lbs';
     let editModalUnit = 'lbs';
     let addModalAssisted = false;
@@ -5525,17 +5874,130 @@
         const btn = document.getElementById('focusSplit' + s.charAt(0) + s.slice(1).toLowerCase());
         if (btn) btn.classList.toggle('active', s === split);
       });
-      restartFocusedWorkout();
+      if (!isRoutineSessionActive) {
+        renderRoutineLauncherUI();
+      } else {
+        restartFocusedWorkout();
+      }
     }
 
     function restartFocusedWorkout() {
       focusedExerciseIndex = 0;
       activeSetIndex = 1;
       focusedSessionLog = [];
-      document.getElementById('focusCelebrationCard').classList.add('hidden');
-      document.getElementById('focusActiveCard').classList.remove('hidden');
+      warmupsSkippedForExercise = {};
+      isRoutineSessionActive = true;
+      const launcherCard = document.getElementById('focusRoutineLauncherCard');
+      if (launcherCard) launcherCard.classList.add('hidden');
+      const celebCard = document.getElementById('focusCelebrationCard');
+      if (celebCard) celebCard.classList.add('hidden');
+      const activeCard = document.getElementById('focusActiveCard');
+      if (activeCard) activeCard.classList.remove('hidden');
       renderFocusedExercise();
       showToast(`Ready for ${focusedSplit} - Exercise 1`);
+    }
+
+    function renderRoutineLauncherUI() {
+      const list = getFocusedList();
+      const splitBadge = document.getElementById('launcherSplitBadge');
+      if (splitBadge) splitBadge.textContent = `${focusedSplit} ROUTINE`;
+      const routineTitle = document.getElementById('launcherRoutineTitle');
+      if (routineTitle) routineTitle.textContent = `${focusedSplit} Workout Routine`;
+      const routineSub = document.getElementById('launcherRoutineSubtitle');
+      if (routineSub) routineSub.textContent = `Prescribed neural warm-ups, working sets, and auto-transition rest`;
+
+      const totalExEl = document.getElementById('launcherTotalExercises');
+      if (totalExEl) totalExEl.textContent = `${list.length} Lifts`;
+      const totalSetsEl = document.getElementById('launcherTotalSets');
+      if (totalSetsEl) {
+        const totalSets = list.reduce((sum, ex) => sum + (ex.activeSetsCount || ex.targetSets || 3), 0);
+        totalSetsEl.textContent = `${totalSets} Sets`;
+      }
+      const estDurEl = document.getElementById('launcherEstDuration');
+      if (estDurEl) {
+        estDurEl.textContent = `~${list.length * 9} Min`;
+      }
+
+      const btnStartText = document.getElementById('btnStartRoutineText');
+      if (btnStartText) btnStartText.textContent = `START ${focusedSplit} WORKOUT`;
+
+      const listContainer = document.getElementById('launcherExerciseList');
+      if (listContainer) {
+        listContainer.innerHTML = '';
+        list.forEach((ex, idx) => {
+          const dummyContext = { previousMuscleGroupsWorked: list.slice(0, idx).map(x => (x.muscleGroup || '').toUpperCase()) };
+          const prescription = generateWarmupPrescription(ex, ex, dummyContext);
+          let warmupPill = '';
+          if (prescription.warmups && prescription.warmups.length > 0) {
+            warmupPill = `<span class="badge" style="background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); font-size: 10px;">🔥 ${prescription.warmups.length} Warm-Ups</span>`;
+          } else {
+            warmupPill = `<span class="badge" style="background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); font-size: 10px;">✓ Primed</span>`;
+          }
+
+          const w1 = ex.loads ? ex.loads[0] : (ex.weight || 0);
+          const row = document.createElement('div');
+          row.style.cssText = 'background: #18181b; border: 1px solid #27272a; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between;';
+          row.innerHTML = `
+            <div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; font-weight: 900; color: #71717a;">${idx + 1}.</span>
+                <span style="font-size: 13px; font-weight: 800; color: #ffffff;">${ex.name}</span>
+              </div>
+              <div style="font-size: 11px; color: #a1a1aa; margin-top: 2px;">
+                ${ex.muscleGroup || 'Compound'} • Anchor: <strong style="color: #cbd5e1;">${w1} ${ex.unit}</strong> (${ex.activeSetsCount || 3} sets)
+              </div>
+            </div>
+            <div>${warmupPill}</div>
+          `;
+          listContainer.appendChild(row);
+        });
+      }
+    }
+
+    function startFocusedWorkoutRoutine() {
+      isRoutineSessionActive = true;
+      focusedExerciseIndex = 0;
+      activeSetIndex = 1;
+      focusedSessionLog = [];
+      warmupsSkippedForExercise = {};
+
+      const launcherCard = document.getElementById('focusRoutineLauncherCard');
+      if (launcherCard) launcherCard.classList.add('hidden');
+      const activeCard = document.getElementById('focusActiveCard');
+      if (activeCard) activeCard.classList.remove('hidden');
+
+      renderFocusedExercise();
+      playTone(600, 'sine', 0.15);
+      showToast(`▶ Starting ${focusedSplit} Routine - Lift 1`);
+    }
+
+    function exitWorkoutRoutineToLauncher() {
+      isRoutineSessionActive = false;
+      stopRestTimer(true);
+      if (transitionRestInterval) {
+        clearInterval(transitionRestInterval);
+        transitionRestInterval = null;
+      }
+      isTransitionRestMode = false;
+      isWarmupMode = false;
+
+      const activeCard = document.getElementById('focusActiveCard');
+      if (activeCard) activeCard.classList.add('hidden');
+      const transCard = document.getElementById('focusTransitionRestCard');
+      if (transCard) transCard.classList.add('hidden');
+      const singleRecapCard = document.getElementById('focusSingleExerciseRecapCard');
+      if (singleRecapCard) singleRecapCard.classList.add('hidden');
+      const celebCard = document.getElementById('focusCelebrationCard');
+      if (celebCard) celebCard.classList.add('hidden');
+
+      const launcherCard = document.getElementById('focusRoutineLauncherCard');
+      if (launcherCard) launcherCard.classList.remove('hidden');
+
+      renderRoutineLauncherUI();
+      if (typeof LiveActivityBridge !== 'undefined') {
+        LiveActivityBridge.endWorkoutActivity();
+      }
+      showToast('Workout routine closed. Returned to Routine Hub.');
     }
 
     function getFocusedList() {
@@ -5826,6 +6288,210 @@
       showToast(`⏱️ Warm-up Set ${setNum} completed! Resting ${seconds}s.`);
     }
 
+    /* WARMUP STAGE PROGRESSION ENGINE (WARM-UPS LOGGED FIRST) */
+    function checkAndInitWarmupsForCurrentExercise() {
+      const ex = getActiveFocusedExercise();
+      if (!ex) return;
+
+      const context = getFocusedWorkoutContext();
+      const prescription = generateWarmupPrescription(ex, ex, context);
+
+      if (prescription.warmups && prescription.warmups.length > 0 && !warmupsSkippedForExercise[ex.id]) {
+        isWarmupMode = true;
+        currentWarmupPrescription = prescription;
+        currentTotalWarmups = prescription.warmups.length;
+        currentWarmupIndex = 1;
+        renderActiveWarmupStageUI();
+      } else {
+        isWarmupMode = false;
+        currentWarmupPrescription = null;
+        renderWorkingSetStageUI();
+      }
+    }
+
+    function renderActiveWarmupStageUI() {
+      if (!isWarmupMode || !currentWarmupPrescription) return;
+      const ex = getActiveFocusedExercise();
+      if (!ex) return;
+
+      const warmups = currentWarmupPrescription.warmups;
+      const w = warmups[currentWarmupIndex - 1];
+      if (!w) {
+        isWarmupMode = false;
+        renderWorkingSetStageUI();
+        return;
+      }
+
+      const c1 = document.getElementById('chamberSet1');
+      const c2 = document.getElementById('chamberSet2');
+      const c3 = document.getElementById('chamberSet3');
+      if (c1) c1.classList.add('hidden');
+      if (c2) c2.classList.add('hidden');
+      if (c3) c3.classList.add('hidden');
+
+      const wChamber = document.getElementById('focusWarmupChamberCard');
+      if (wChamber) wChamber.classList.remove('hidden');
+
+      const heroTitle = document.getElementById('warmupHeroTitle');
+      if (heroTitle) heroTitle.textContent = `WARM-UP ${currentWarmupIndex} of ${currentTotalWarmups}`;
+      const pctBadge = document.getElementById('warmupPctBadge');
+      if (pctBadge) pctBadge.textContent = `${w.pct} LOAD`;
+      const weightBadge = document.getElementById('warmupWeightBadge');
+      if (weightBadge) weightBadge.textContent = `${w.load} ${ex.unit.toUpperCase()}`;
+      const targetText = document.getElementById('warmupPrescribedTargetText');
+      if (targetText) targetText.textContent = `${w.targetReps} REPS @ ${w.load} ${ex.unit.toUpperCase()}`;
+      const reasonText = document.getElementById('warmupReasonSubtext');
+      if (reasonText) reasonText.textContent = `${currentWarmupPrescription.reason || 'Neural potentiation & motor pattern groove'} (${w.restSeconds}s rest)`;
+      const completeNum = document.getElementById('btnCompleteWarmupNum');
+      if (completeNum) completeNum.textContent = `${currentWarmupIndex}`;
+
+      currentWarmupTargetText = `${w.targetReps}r @ ${w.load} ${ex.unit.toUpperCase()} (${w.pct})`;
+      currentWarmupLoadText = `${w.load} ${ex.unit.toUpperCase()}`;
+      currentWarmupRepsText = `${w.targetReps}r`;
+
+      // Prescribed warmup rest
+      restTimerPrescribed = w.restSeconds || 60;
+      updatePrescribedRestUI(true);
+
+      if (typeof LiveActivityBridge !== 'undefined') {
+        LiveActivityBridge.syncCurrentWorkoutState({
+          isWarmup: true,
+          warmupIndex: currentWarmupIndex,
+          totalWarmups: currentTotalWarmups,
+          warmupTargetText: currentWarmupTargetText,
+          loadText: currentWarmupLoadText,
+          targetRepsText: currentWarmupRepsText,
+          isResting: restTimerRunning,
+          restDuration: restTimerRemaining,
+          isTriageLogging: false
+        });
+      }
+    }
+
+    function completeCurrentWarmupSet() {
+      if (!isWarmupMode || !currentWarmupPrescription) return;
+      playTone(580, 'sine', 0.12);
+      showToast(`🔥 Warm-Up ${currentWarmupIndex} completed! Starting rest.`);
+      const w = currentWarmupPrescription.warmups[currentWarmupIndex - 1];
+      const restSec = (w && w.restSeconds) ? w.restSeconds : 60;
+
+      restTimerPrescribed = restSec;
+      restTimerRemaining = restSec;
+      startRestTimer();
+    }
+
+    function advanceWarmupAfterRest() {
+      if (!isWarmupMode || !currentWarmupPrescription) return;
+      if (currentWarmupIndex < currentTotalWarmups) {
+        currentWarmupIndex++;
+        renderActiveWarmupStageUI();
+      } else {
+        isWarmupMode = false;
+        showToast('🔥 All warm-up sets complete! Ready for Set 1 (Anchor Set)');
+        renderWorkingSetStageUI();
+      }
+    }
+
+    function renderWorkingSetStageUI() {
+      const wChamber = document.getElementById('focusWarmupChamberCard');
+      if (wChamber) wChamber.classList.add('hidden');
+      activeSetIndex = 1;
+      updateChamberVisibility();
+      updatePrescribedRestUI(false);
+
+      if (typeof LiveActivityBridge !== 'undefined') {
+        LiveActivityBridge.syncCurrentWorkoutState({
+          isWarmup: false,
+          isResting: restTimerRunning,
+          restDuration: restTimerRemaining,
+          isTriageLogging: false
+        });
+      }
+    }
+
+    function skipWarmupsAndStartWorkingSets() {
+      const ex = getActiveFocusedExercise();
+      if (ex) warmupsSkippedForExercise[ex.id] = true;
+      isWarmupMode = false;
+      stopRestTimer(true);
+      showToast('Skipped warm-ups. Entering Working Set 1.');
+      renderWorkingSetStageUI();
+    }
+
+    /* INTER-EXERCISE TRANSITION REST (AUTOMATIC REST BETWEEN EXERCISES) */
+    function formatTimeDurationString(sec) {
+      const mins = Math.floor(sec / 60);
+      const secs = sec % 60;
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function startInterExerciseTransitionRest(duration, nextEx) {
+      isTransitionRestMode = true;
+      transitionNextExName = nextEx ? nextEx.name : 'Next Lift';
+      transitionRestRemaining = duration;
+
+      const activeCard = document.getElementById('focusActiveCard');
+      if (activeCard) activeCard.classList.add('hidden');
+      const recapCard = document.getElementById('focusSingleExerciseRecapCard');
+      if (recapCard) recapCard.classList.add('hidden');
+      const transCard = document.getElementById('focusTransitionRestCard');
+      if (transCard) transCard.classList.remove('hidden');
+
+      const titleEl = document.getElementById('transitionNextExerciseTitle');
+      if (titleEl) titleEl.textContent = nextEx.name;
+      const metaEl = document.getElementById('transitionNextExerciseMeta');
+      if (metaEl) {
+        metaEl.textContent = `${nextEx.split} • ${nextEx.category || 'Compound'} (${nextEx.muscleGroup || 'Target'})`;
+      }
+
+      const digitsEl = document.getElementById('transitionRestDigits');
+      if (digitsEl) digitsEl.textContent = formatTimeDurationString(transitionRestRemaining);
+
+      if (typeof LiveActivityBridge !== 'undefined') {
+        LiveActivityBridge.syncCurrentWorkoutState({
+          isTransitionRest: true,
+          nextExerciseName: nextEx.name,
+          isResting: true,
+          restDuration: duration,
+          isTriageLogging: false
+        });
+      }
+
+      playTone(580, 'sine', 0.1);
+      clearInterval(transitionRestInterval);
+      transitionRestInterval = setInterval(() => {
+        if (transitionRestRemaining > 0) {
+          transitionRestRemaining--;
+          if (transitionRestRemaining === 3 || transitionRestRemaining === 2 || transitionRestRemaining === 1) {
+            playTone(440, 'sine', 0.05);
+          }
+          const digitsEl = document.getElementById('transitionRestDigits');
+          if (digitsEl) digitsEl.textContent = formatTimeDurationString(transitionRestRemaining);
+          if (transitionRestRemaining === 0) {
+            finishTransitionRestAndStartExercise();
+          }
+        }
+      }, 1000);
+    }
+
+    function skipTransitionRestNow() {
+      finishTransitionRestAndStartExercise();
+    }
+
+    function finishTransitionRestAndStartExercise() {
+      if (transitionRestInterval) {
+        clearInterval(transitionRestInterval);
+        transitionRestInterval = null;
+      }
+      isTransitionRestMode = false;
+      const transCard = document.getElementById('focusTransitionRestCard');
+      if (transCard) transCard.classList.add('hidden');
+      playTone(660, 'triangle', 0.15);
+      setTimeout(() => playTone(880, 'sine', 0.25), 160);
+      showToast('⏱️ Transition rest complete! Starting next lift.');
+      renderFocusedExercise();
+    }
+
     /* =========================================================================
        DPO PRESCRIBED REST TIMER ENGINE (SPEC §2.3, §4, §5.2, §5.3, §6)
        ========================================================================= */
@@ -5944,7 +6610,7 @@
       playTone(580, 'sine', 0.1);
       renderRestTimerDisplay();
       if (typeof LiveActivityBridge !== 'undefined') {
-        LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: restTimerRemaining });
+        LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: restTimerRemaining, isTriageLogging: false });
       }
 
       clearInterval(restTimerInterval);
@@ -5961,6 +6627,9 @@
             setTimeout(() => playTone(880, 'sine', 0.25), 160);
             renderRestTimerDisplay();
             showToast('⏱️ Rest interval complete! Ready for next set.');
+            if (typeof isWarmupMode !== 'undefined' && isWarmupMode) {
+              advanceWarmupAfterRest();
+            }
           }
         }
       }, 1000);
@@ -5974,7 +6643,8 @@
       }
       renderRestTimerDisplay();
       if (typeof LiveActivityBridge !== 'undefined') {
-        LiveActivityBridge.syncCurrentWorkoutState({ isResting: false, restDuration: 0 });
+        const isTriage = (restTimerRemaining === 0 || !reset);
+        LiveActivityBridge.syncCurrentWorkoutState({ isResting: false, restDuration: 0, isTriageLogging: isTriage });
       }
     }
 
@@ -5991,6 +6661,9 @@
       playTone(520, 'sine', 0.06);
       restTimerRemaining = Math.max(0, restTimerRemaining + deltaSeconds);
       renderRestTimerDisplay();
+      if (typeof LiveActivityBridge !== 'undefined' && restTimerRunning) {
+        LiveActivityBridge.syncCurrentWorkoutState({ isResting: true, restDuration: restTimerRemaining, isTriageLogging: false });
+      }
     }
 
     function resetRestTimerToPrescribed() {
@@ -6003,6 +6676,9 @@
       activeSetIndex = setNum;
       updateChamberVisibility();
       updatePrescribedRestUI(true);
+      if (typeof LiveActivityBridge !== 'undefined') {
+        LiveActivityBridge.syncCurrentWorkoutState({ isResting: restTimerRunning, restDuration: restTimerRemaining, isTriageLogging: false });
+      }
     }
 
     function updateChamberVisibility() {
@@ -6077,14 +6753,28 @@
         return;
       }
 
-      if (focusedExerciseIndex >= list.length) {
-        showCelebrationRecap();
+      if (!isRoutineSessionActive) {
+        const activeCard = document.getElementById('focusActiveCard');
+        if (activeCard) activeCard.classList.add('hidden');
+        const transCard = document.getElementById('focusTransitionRestCard');
+        if (transCard) transCard.classList.add('hidden');
+        const singleRecapCard = document.getElementById('focusSingleExerciseRecapCard');
+        if (singleRecapCard) singleRecapCard.classList.add('hidden');
+        const celebCard = document.getElementById('focusCelebrationCard');
+        if (celebCard) celebCard.classList.add('hidden');
+        const launcherCard = document.getElementById('focusRoutineLauncherCard');
+        if (launcherCard) launcherCard.classList.remove('hidden');
+        renderRoutineLauncherUI();
         return;
       }
 
-      document.getElementById('focusCelebrationCard').classList.add('hidden');
+      const launcherCard = document.getElementById('focusRoutineLauncherCard');
+      if (launcherCard) launcherCard.classList.add('hidden');
+      const transCard = document.getElementById('focusTransitionRestCard');
+      if (transCard) transCard.classList.add('hidden');
       const singleRecapCard = document.getElementById('focusSingleExerciseRecapCard');
       if (singleRecapCard) singleRecapCard.classList.add('hidden');
+      document.getElementById('focusCelebrationCard').classList.add('hidden');
       document.getElementById('focusActiveCard').classList.remove('hidden');
 
       const ex = list[focusedExerciseIndex];
@@ -6123,10 +6813,30 @@
           calibBtn.style.color = '#fbbf24';
           calibBtn.style.borderColor = 'rgba(245,158,11,0.5)';
         } else {
-          calibBtn.textContent = '🎯 Calibrate';
-          calibBtn.style.background = 'rgba(56,189,248,0.18)';
-          calibBtn.style.color = '#38bdf8';
-          calibBtn.style.borderColor = 'rgba(56,189,248,0.4)';
+          const isDue = (ex.sessionsSinceRecalibration || 0) >= 5 || ex.isRecalibrationActive;
+          if (isDue) {
+            calibBtn.textContent = '🔬 Recalibrate (Due)';
+            calibBtn.style.background = 'rgba(168,85,247,0.28)';
+            calibBtn.style.color = '#f3e8ff';
+            calibBtn.style.borderColor = 'rgba(168,85,247,0.6)';
+          } else {
+            calibBtn.textContent = '🔬 Recalibrate';
+            calibBtn.style.background = 'rgba(168,85,247,0.18)';
+            calibBtn.style.color = '#c084fc';
+            calibBtn.style.borderColor = 'rgba(168,85,247,0.4)';
+          }
+        }
+        calibBtn.onclick = handleFocusCalibrateClick;
+      }
+
+      const resetRecalBtn = document.getElementById('focusResetRecalBtn');
+      if (resetRecalBtn) {
+        const count = ex.sessionsSinceRecalibration || 0;
+        if (count > 0 || ex.isRecalibrationActive) {
+          resetRecalBtn.style.display = 'inline-block';
+          resetRecalBtn.textContent = `↺ Reset Recal (${count}/5)`;
+        } else {
+          resetRecalBtn.style.display = 'none';
         }
       }
 
@@ -6147,6 +6857,17 @@
         document.getElementById('focusExMeta').textContent =
           `W1: ${ex.loads[0]} ${ex.unit} • W2: ${ex.loads[1]} ${ex.unit}${numSets === 3 ? ' • W3: ' + ex.loads[2] + ' ' + ex.unit : ''} • Reps: ${rMin}–${rMax} • Inc: +${s} • FI: ${(ex.fatigueIndex || 0).toFixed(2)} • e1RM: ${ex.e1RM || calculateE1RM(ex.loads[0], 12)} ${ex.unit}${minLimitTag}${recalTag}${floorTag}${calibTag}`;
       }
+
+      // Rep Range Pills & Badges
+      const repRangeFormatted = `${rMin}–${rMax} REPS`;
+      const repPillHeader = document.getElementById('focusRepRangePill');
+      if (repPillHeader) repPillHeader.textContent = repRangeFormatted;
+      const c1RepBadge = document.getElementById('c1_repRangeBadge');
+      if (c1RepBadge) c1RepBadge.textContent = repRangeFormatted;
+      const c2RepBadge = document.getElementById('c2_repRangeBadge');
+      if (c2RepBadge) c2RepBadge.textContent = repRangeFormatted;
+      const c3RepBadge = document.getElementById('c3_repRangeBadge');
+      if (c3RepBadge) c3RepBadge.textContent = repRangeFormatted;
 
       // Weight Badges inside chambers
       document.getElementById('c1_weightBadge').textContent = ex.isAssisted ? `${ex.loads[0]} ${ex.unit} Assist` : `${ex.loads[0]} ${ex.unit}`;
@@ -6274,6 +6995,17 @@
         });
       });
 
+      if (isRecalibration) {
+        const u1 = document.getElementById('c1_underTargetReps');
+        const p1 = document.getElementById('c1_prescribedTargetReps');
+        const o1 = document.getElementById('c1_overloadTargetReps');
+        const sub1 = document.getElementById('c1_overloadSubtext');
+        if (u1) u1.textContent = `< ${predictedReps}`;
+        if (p1) p1.textContent = `${predictedReps} Target`;
+        if (o1) o1.textContent = `${predictedReps + 1}+`;
+        if (sub1) sub1.textContent = `Supercomp`;
+      }
+
       // Set 2 Advance Button
       const c2NextBtn = document.getElementById('c2_btnNext');
       if (numSets === 2) {
@@ -6325,14 +7057,18 @@
         finishBtn.textContent = `Save, Log & Next: ${nextEx.name} →`;
       }
 
-      if (typeof LiveActivityBridge !== 'undefined') {
-        LiveActivityBridge.syncCurrentWorkoutState();
-      }
+      checkAndInitWarmupsForCurrentExercise();
     }
 
     /* =========================================================================
        CHAMBER DECISION HANDLERS (DPO ALGORITHMIC PIPELINE)
        ========================================================================= */
+
+    function handleFocusCalibrateClick() {
+      const ex = getActiveFocusedExercise();
+      if (!ex) return;
+      openCalibrationModal(ex.id);
+    }
 
     /* FULL-SIZED DYNAMIC ISLAND MATCH TRIAGE HANDLERS */
     function handleChamberS1Triage(outcome) {
@@ -6343,7 +7079,12 @@
       if (pCard) pCard.classList.toggle('active-triage', outcome === 'target');
       if (oCard) oCard.classList.toggle('active-triage', outcome === 'overload');
 
-      if (outcome === 'overload') {
+      const ex = getActiveFocusedExercise();
+      const isRecalibration = ex && ((ex.sessionsSinceRecalibration || 0) >= 5 || ex.isRecalibrationActive);
+
+      if (isRecalibration) {
+        handleChamberS1RecalibrationTriage(outcome);
+      } else if (outcome === 'overload') {
         handleChamberS1Answer('YES');
       } else if (outcome === 'target') {
         handleChamberS1Answer('NO');
@@ -6356,6 +7097,41 @@
       // Hide legacy secondary followup box so single-tap triage displays verdict cleanly
       const followup = document.getElementById('c1_followup');
       if (followup) followup.classList.add('hidden');
+    }
+
+    function handleChamberS1RecalibrationTriage(outcome) {
+      playTone(480);
+      const ex = getActiveFocusedExercise();
+      if (!ex) return;
+
+      const verdict = document.getElementById('c1_verdict');
+      const rMax = ex.repWindowMax || 12;
+      const predictedReps = calculatePredictedReps(ex.e1RM, ex.loads[0]) || rMax;
+
+      let actualReps = predictedReps;
+      if (outcome === 'overload') {
+        actualReps = predictedReps + 2;
+      } else if (outcome === 'missed') {
+        actualReps = Math.max(1, predictedReps - 2);
+      }
+
+      const recalResult = evaluateRecalibration(ex, ex.loads[0], actualReps);
+
+      s1Eval = {
+        reps: actualReps,
+        action: recalResult.status === 'SUPERCOMPENSATION' ? 'RECAL_PASS' : (recalResult.status === 'FATIGUE_FLAG' ? 'RECAL_FAIL' : 'RECAL_VERIFIED'),
+        nextLoads: [ex.loads[0], ex.loads[1], ex.loads[2]],
+        recalResult,
+        msg: recalResult.msg
+      };
+
+      if (verdict) {
+        verdict.className = (recalResult.status === 'SUPERCOMPENSATION') ? 'verdict-box verdict-green' : ((recalResult.status === 'FATIGUE_FLAG') ? 'verdict-box verdict-rose' : 'verdict-box verdict-amber');
+        verdict.textContent = `Verdict: ${recalResult.msg}`;
+        verdict.classList.remove('hidden');
+      }
+      const nextBtn = document.getElementById('c1_btnNext');
+      if (nextBtn) nextBtn.disabled = false;
     }
 
     function handleChamberS2Triage(outcome) {
@@ -7223,17 +7999,58 @@
       if (btn) {
         btn.textContent = isFinal ? 'View Workout Recap 🏆' : 'Continue to Next Lift →';
       }
+
+      // Sync Exercise Recap state to Dynamic Island and Lock Screen
+      try {
+        const setSummaries = [];
+        for (let i = 0; i < setsCount; i++) {
+          const r = repsArr[i] !== undefined ? repsArr[i] : '-';
+          const ld = loadsArr && loadsArr[i] !== undefined ? loadsArr[i] : prevW;
+          setSummaries.push(`S${i + 1}: ${r}r (${ld} ${unit})`);
+        }
+        const loggedSetsStr = setSummaries.join(' • ');
+
+        let headlineStr = 'WORKING LOAD CONSOLIDATED';
+        if (nextW > prevW) {
+          headlineStr = `OVERLOAD BREAKTHROUGH (+${delta} ${unit})`;
+        } else if (ex.isAssisted && nextW < prevW) {
+          headlineStr = `ASSISTANCE REDUCED (-${delta} ${unit})`;
+        }
+        const nextTargetStr = `Next: ${nextW} ${unit}`;
+
+        if (typeof LiveActivityBridge !== 'undefined') {
+          LiveActivityBridge.syncCurrentWorkoutState({
+            isRecap: true,
+            isResting: false,
+            isTriageLogging: false,
+            recapLoggedSetsText: loggedSetsStr,
+            recapProgressionHeadline: headlineStr,
+            recapNextTargetText: nextTargetStr,
+            recapIsFinalExercise: isFinal
+          });
+        }
+      } catch (err) {
+        console.debug('[LiveActivityBridge] Recap sync error:', err);
+      }
     }
 
     function advanceToNextExerciseAfterRecap() {
       const recapCard = document.getElementById('focusSingleExerciseRecapCard');
       if (recapCard) recapCard.classList.add('hidden');
       focusedExerciseIndex++;
-      renderFocusedExercise();
+      const list = getFocusedList();
+      if (focusedExerciseIndex >= list.length) {
+        showCelebrationRecap();
+        return;
+      }
+      const nextEx = list[focusedExerciseIndex];
+      // Automatically starts inter-exercise recovery rest without user input
+      startInterExerciseTransitionRest(120, nextEx);
     }
 
     function showCelebrationRecap() {
       playFanfare();
+      isRoutineSessionActive = false;
       document.getElementById('focusActiveCard').classList.add('hidden');
       const recapCard = document.getElementById('focusCelebrationCard');
       recapCard.classList.remove('hidden');
@@ -7477,21 +8294,88 @@
       if (!ex) return;
       playTone(560);
       ex.sessionsSinceRecalibration = 5;
+      ex.isRecalibrationActive = true;
       saveExercises();
       renderFocusedExercise();
+      renderCalibrationView();
       showToast(`🔬 Periodic Recalibration triggered for ${ex.name}!`);
+    }
+
+    /* RESET EXERCISE RECALIBRATION COUNT (0/5) */
+    function resetExerciseRecalibrationCount(exerciseId) {
+      playTone(420);
+      const targetId = exerciseId || selectedCalibExerciseId || currentCalibratingExerciseId || (getActiveFocusedExercise() ? getActiveFocusedExercise().id : null);
+      const ex = exercises.find(e => e.id === targetId);
+      if (!ex) return;
+
+      const prevCount = ex.sessionsSinceRecalibration || 0;
+      ex.sessionsSinceRecalibration = 0;
+      ex.isRecalibrationActive = false;
+      saveExercises();
+      closeModal('modalCalibrationReset');
+      renderFocusedExercise();
+      renderExerciseList();
+      renderCalibrationView();
+      showToast(`Recalibration count reset to 0/5 for ${ex.name} (was ${prevCount}).`);
+    }
+
+    function resetCurrentExerciseRecalCount() {
+      resetExerciseRecalibrationCount();
+    }
+
+    function resetAllRecalibrationCounts() {
+      if (!confirm('Reset recalibration countdown to 0/5 for ALL exercises? Calibrated 1RMs and Fatigue Indices will be preserved.')) return;
+      playTone(420);
+      exercises.forEach(e => {
+        e.sessionsSinceRecalibration = 0;
+        e.isRecalibrationActive = false;
+      });
+      saveExercises();
+      closeModal('modalCalibrationReset');
+      renderFocusedExercise();
+      renderExerciseList();
+      renderCalibrationView();
+      showToast('Recalibration counts reset to 0/5 across all exercises.');
+    }
+
+    function resetAllCalibrations() {
+      if (!confirm('Reset ALL exercises to Uncalibrated? This clears calibrated 1RM, Fatigue Index, and recalibration countdowns for the entire fleet.')) return;
+      playTone(420);
+      exercises.forEach(e => {
+        e.isCalibrated = false;
+        e.fatigueIndex = 0.0;
+        e.sessionsSinceRecalibration = 0;
+        e.isRecalibrationActive = false;
+        e.consecutiveSet3Failures = 0;
+        e.consecutiveStagnations = 0;
+        delete e.baseline_e1RM;
+        delete e.calibrationDate;
+      });
+      saveExercises();
+      closeModal('modalCalibrationReset');
+      renderFocusedExercise();
+      renderExerciseList();
+      renderCalibrationView();
+      showToast('All exercises reset to Uncalibrated.');
+    }
+
+    function openCalibrationResetModal() {
+      playTone(450);
+      const modal = document.getElementById('modalCalibrationReset');
+      if (modal) modal.style.display = 'flex';
     }
 
     /* RESET EXERCISE CALIBRATION */
     function resetCurrentExerciseCalibration(exerciseId) {
       playTone(420);
-      const targetId = exerciseId || currentCalibratingExerciseId || (getActiveFocusedExercise() ? getActiveFocusedExercise().id : null);
+      const targetId = exerciseId || currentCalibratingExerciseId || selectedCalibExerciseId || (getActiveFocusedExercise() ? getActiveFocusedExercise().id : null);
       const ex = exercises.find(e => e.id === targetId);
       if (!ex) return;
 
       ex.isCalibrated = false;
       ex.fatigueIndex = 0.0;
       ex.sessionsSinceRecalibration = 0;
+      ex.isRecalibrationActive = false;
       ex.consecutiveSet3Failures = 0;
       ex.consecutiveStagnations = 0;
       delete ex.baseline_e1RM;
@@ -7500,6 +8384,7 @@
       saveExercises();
       closeModal('modalCalibration');
       closeModal('modalEditExercise');
+      closeModal('modalCalibrationReset');
       renderFocusedExercise();
       renderExerciseList();
       renderCalibrationView();
@@ -7701,6 +8586,13 @@
         calibLabel.style.color = ex.isCalibrated ? '#6ee7b7' : '#fbbf24';
       }
 
+      const recalLabel = document.getElementById('editExRecalStatusLabel');
+      if (recalLabel) {
+        const count = ex.sessionsSinceRecalibration || 0;
+        recalLabel.textContent = `${count} of 5 Sessions${count >= 5 ? ' (⚠️ Recal Due)' : ''}`;
+        recalLabel.style.color = count >= 5 ? '#fbbf24' : '#94a3b8';
+      }
+
       setEditUnit(ex.unit);
       setEditType(!!ex.isAssisted);
       document.getElementById('modalEditExercise').style.display = 'flex';
@@ -7836,7 +8728,10 @@
       playTone(550);
       const resetLive = document.getElementById('chkResetLiveSession').checked;
       const resetStreak = document.getElementById('chkResetActiveStreak').checked;
+      const resetRecalCount = document.getElementById('chkResetRecalCount') ? document.getElementById('chkResetRecalCount').checked : false;
       const resetCalib = document.getElementById('chkResetCalibration') ? document.getElementById('chkResetCalibration').checked : false;
+      const resetAllRecal = document.getElementById('chkResetAllRecal') ? document.getElementById('chkResetAllRecal').checked : false;
+      const resetAllCalib = document.getElementById('chkResetAllCalib') ? document.getElementById('chkResetAllCalib').checked : false;
       const resetHistory = document.getElementById('chkResetHistory').checked;
       const resetFactory = document.getElementById('chkResetFactory').checked;
 
@@ -7853,6 +8748,7 @@
           renderFocusedExercise();
           renderExerciseList();
           renderHistoryList();
+          renderCalibrationView();
           showToast('Factory Reset Complete');
         }
         return;
@@ -7873,20 +8769,50 @@
         }
       }
 
+      if (resetRecalCount) {
+        const ex = getActiveFocusedExercise();
+        if (ex) {
+          ex.sessionsSinceRecalibration = 0;
+          ex.isRecalibrationActive = false;
+          saveExercises();
+        }
+      }
+
       if (resetCalib) {
+        const ex = getActiveFocusedExercise();
+        if (ex) {
+          ex.isCalibrated = false;
+          ex.fatigueIndex = 0.0;
+          ex.sessionsSinceRecalibration = 0;
+          ex.isRecalibrationActive = false;
+          ex.consecutiveSet3Failures = 0;
+          ex.consecutiveStagnations = 0;
+          delete ex.baseline_e1RM;
+          delete ex.calibrationDate;
+          saveExercises();
+        }
+      }
+
+      if (resetAllRecal) {
+        exercises.forEach(e => {
+          e.sessionsSinceRecalibration = 0;
+          e.isRecalibrationActive = false;
+        });
+        saveExercises();
+      }
+
+      if (resetAllCalib) {
         exercises.forEach(e => {
           e.isCalibrated = false;
           e.fatigueIndex = 0.0;
           e.sessionsSinceRecalibration = 0;
+          e.isRecalibrationActive = false;
           e.consecutiveSet3Failures = 0;
           e.consecutiveStagnations = 0;
           delete e.baseline_e1RM;
           delete e.calibrationDate;
         });
         saveExercises();
-        renderFocusedExercise();
-        renderExerciseList();
-        showToast('All exercises reset to Uncalibrated');
       }
 
       if (resetHistory) {
@@ -7898,6 +8824,7 @@
       closeModal('modalResetManager');
       renderFocusedExercise();
       renderExerciseList();
+      renderCalibrationView();
       showToast('Reset applied');
     }
 
@@ -8289,6 +9216,12 @@
           dotsContainer.appendChild(dot);
         }
       }
+
+      const resetBtn = document.getElementById('calibInspResetRecalBtn');
+      if (resetBtn) {
+        resetBtn.style.opacity = (streak > 0 || ex.isRecalibrationActive) ? '1' : '0.6';
+        resetBtn.title = `Reset recalibration count to 0/5 for ${ex.name} (currently ${streak}/5)`;
+      }
     }
 
     function renderCalibrationSpectrumChart() {
@@ -8422,12 +9355,18 @@
             </div>
 
             <!-- Card Actions -->
-            <div style="display:flex; gap:6px; margin-top:2px;" onclick="event.stopPropagation();">
-              <button type="button" class="btn btn-green" style="flex:1; padding:6px; font-size:10.5px;" onclick="openCalibrationModal('${ex.id}')">
-                🎯 Calibrate
+            <div style="display:flex; gap:6px; margin-top:2px; flex-wrap:wrap;" onclick="event.stopPropagation();">
+              <button type="button" class="btn btn-green" style="flex:1; min-width:65px; padding:6px; font-size:10.5px;" onclick="openCalibrationModal('${ex.id}')">
+                🎯 Calib
               </button>
-              <button type="button" class="btn btn-blue-outline" style="padding:6px 10px; font-size:10.5px;" onclick="flagSpecificLiftForRecal('${ex.id}')" title="Flag for failure recalibration on next workout">
+              <button type="button" class="btn btn-blue-outline" style="padding:6px 8px; font-size:10.5px;" onclick="flagSpecificLiftForRecal('${ex.id}')" title="Flag for failure recalibration on next workout">
                 🔬 Recal
+              </button>
+              <button type="button" class="btn btn-amber-outline" style="padding:6px 8px; font-size:10.5px;" onclick="resetExerciseRecalibrationCount('${ex.id}')" title="Reset recalibration countdown to 0/5">
+                ↺ Count
+              </button>
+              <button type="button" class="btn btn-rose-outline" style="padding:6px 8px; font-size:10.5px;" onclick="resetCurrentExerciseCalibration('${ex.id}')" title="Clear calibration and revert to uncalibrated">
+                ↺ Reset
               </button>
             </div>
           </div>
@@ -8523,8 +9462,17 @@
     }
 
     function resetSelectedLiftCalibration() {
-      if (selectedCalibExerciseId) {
-        resetCurrentExerciseCalibration(selectedCalibExerciseId);
+      const targetId = selectedCalibExerciseId || (getActiveFocusedExercise() ? getActiveFocusedExercise().id : null);
+      if (targetId) {
+        resetCurrentExerciseCalibration(targetId);
+        renderCalibrationView();
+      }
+    }
+
+    function resetSelectedLiftRecalCount() {
+      const targetId = selectedCalibExerciseId || (getActiveFocusedExercise() ? getActiveFocusedExercise().id : null);
+      if (targetId) {
+        resetExerciseRecalibrationCount(targetId);
         renderCalibrationView();
       }
     }

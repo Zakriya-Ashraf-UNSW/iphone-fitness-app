@@ -16,6 +16,8 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
     ]
 
     private static var currentActivity: Any? = nil
+    private static let activityLock = NSLock()
+    private static var isRequestingActivity = false
 
     @objc func isSupported(_ call: CAPPluginCall) {
         if #available(iOS 16.1, *) {
@@ -40,6 +42,18 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         let prescribed = call.getString("prescribedTargetText") ?? "8-11 Target"
         let overload = call.getString("overloadTargetText") ?? "12+ Overload"
         let increment = call.getString("overloadIncrementText") ?? "+5 lbs Next"
+        let isRecap = call.getBool("isRecap") ?? false
+        let recapLoggedSets = call.getString("recapLoggedSetsText") ?? ""
+        let recapProgressionHeadline = call.getString("recapProgressionHeadline") ?? ""
+        let recapNextTarget = call.getString("recapNextTargetText") ?? ""
+        let recapIsFinalExercise = call.getBool("recapIsFinalExercise") ?? false
+
+        let isWarmup = call.getBool("isWarmup") ?? false
+        let warmupIndex = call.getInt("warmupIndex") ?? 1
+        let totalWarmups = call.getInt("totalWarmups") ?? 0
+        let warmupTargetText = call.getString("warmupTargetText") ?? ""
+        let isTransitionRest = call.getBool("isTransitionRest") ?? false
+        let nextExerciseName = call.getString("nextExerciseName") ?? ""
 
         var restEndTimestamp: TimeInterval? = nil
         if isResting && restDuration > 0 {
@@ -59,7 +73,18 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             underTargetText: underTarget,
             prescribedTargetText: prescribed,
             overloadTargetText: overload,
-            overloadIncrementText: increment
+            overloadIncrementText: increment,
+            isRecap: isRecap,
+            recapLoggedSetsText: recapLoggedSets,
+            recapProgressionHeadline: recapProgressionHeadline,
+            recapNextTargetText: recapNextTarget,
+            recapIsFinalExercise: recapIsFinalExercise,
+            isWarmup: isWarmup,
+            warmupIndex: warmupIndex,
+            totalWarmups: totalWarmups,
+            warmupTargetText: warmupTargetText,
+            isTransitionRest: isTransitionRest,
+            nextExerciseName: nextExerciseName
         )
     }
 
@@ -74,29 +99,72 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
-        let attributes = WorkoutActivityAttributes()
         let initialState = extractContentState(from: call)
 
-        do {
-            // End any previous/orphaned activities to prevent duplicates
-            for existing in Activity<WorkoutActivityAttributes>.activities {
-                Task {
-                    await existing.end(dismissalPolicy: .immediate)
+        // If an active activity already exists, reuse and update all active instances to ensure full UI synchronization
+        let activeActivities = Activity<WorkoutActivityAttributes>.activities.filter { $0.activityState == .active }
+        if let primary = activeActivities.first {
+            Self.currentActivity = primary
+            Task {
+                let content = ActivityContent(state: initialState, staleDate: nil)
+                for act in activeActivities {
+                    if #available(iOS 16.2, *) {
+                        await act.update(content)
+                    } else {
+                        await act.update(using: initialState)
+                    }
                 }
+                // Dismiss any duplicate activities so only one remains active on Dynamic Island
+                if activeActivities.count > 1 {
+                    for extra in activeActivities.dropFirst() {
+                        await extra.end(dismissalPolicy: .immediate)
+                    }
+                }
+                call.resolve([
+                    "activityId": primary.id,
+                    "status": "reused_active"
+                ])
+            }
+            return
+        }
+
+        // Lock to serialize activity creation and eliminate race condition duplicates
+        Self.activityLock.lock()
+        if Self.isRequestingActivity {
+            Self.activityLock.unlock()
+            call.resolve(["status": "already_starting"])
+            return
+        }
+        Self.isRequestingActivity = true
+        Self.activityLock.unlock()
+
+        Task {
+            // Clean up any dead/orphaned activity instances before requesting a new one
+            for dead in Activity<WorkoutActivityAttributes>.activities {
+                await dead.end(dismissalPolicy: .immediate)
             }
 
-            let activity = try Activity<WorkoutActivityAttributes>.request(
-                attributes: attributes,
-                contentState: initialState,
-                pushType: nil
-            )
-            Self.currentActivity = activity
-            call.resolve([
-                "activityId": activity.id,
-                "status": "started"
-            ])
-        } catch {
-            call.reject("Failed to start Live Activity: \(error.localizedDescription)")
+            do {
+                let activity = try Activity<WorkoutActivityAttributes>.request(
+                    attributes: WorkoutActivityAttributes(),
+                    contentState: initialState,
+                    pushType: nil
+                )
+                Self.currentActivity = activity
+                Self.activityLock.lock()
+                Self.isRequestingActivity = false
+                Self.activityLock.unlock()
+
+                call.resolve([
+                    "activityId": activity.id,
+                    "status": "started"
+                ])
+            } catch {
+                Self.activityLock.lock()
+                Self.isRequestingActivity = false
+                Self.activityLock.unlock()
+                call.reject("Failed to start Live Activity: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -106,23 +174,30 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
-        // Use in-memory reference or adopt the active system Live Activity if app reloaded
-        let targetActivity = (Self.currentActivity as? Activity<WorkoutActivityAttributes>) ?? Activity<WorkoutActivityAttributes>.activities.first
-
-        guard let activity = targetActivity else {
+        let activeActivities = Activity<WorkoutActivityAttributes>.activities.filter { $0.activityState == .active }
+        guard !activeActivities.isEmpty else {
+            // No active Live Activity exists in system; start a fresh one automatically
             startActivity(call)
             return
         }
-        Self.currentActivity = activity
 
+        Self.currentActivity = activeActivities.first
         let updatedState = extractContentState(from: call)
 
         Task {
-            if #available(iOS 16.2, *) {
-                let content = ActivityContent(state: updatedState, staleDate: nil)
-                await activity.update(content)
-            } else {
-                await activity.update(using: updatedState)
+            let content = ActivityContent(state: updatedState, staleDate: nil)
+            for activity in activeActivities {
+                if #available(iOS 16.2, *) {
+                    await activity.update(content)
+                } else {
+                    await activity.update(using: updatedState)
+                }
+            }
+            // Dismiss duplicate activities if multiple are registered in system
+            if activeActivities.count > 1 {
+                for extra in activeActivities.dropFirst() {
+                    await extra.end(dismissalPolicy: .immediate)
+                }
             }
             call.resolve(["status": "updated"])
         }
@@ -134,14 +209,12 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
-        if let activity = Self.currentActivity as? Activity<WorkoutActivityAttributes> {
-            Task {
-                await activity.end(dismissalPolicy: .immediate)
-                Self.currentActivity = nil
-                call.resolve(["status": "ended"])
+        Task {
+            for act in Activity<WorkoutActivityAttributes>.activities {
+                await act.end(dismissalPolicy: .immediate)
             }
-        } else {
-            call.resolve(["status": "no_active_activity"])
+            Self.currentActivity = nil
+            call.resolve(["status": "ended"])
         }
     }
 
@@ -151,11 +224,11 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
 
         let action = data["action"] as? String ?? "update"
         if action == "end" {
-            if let activity = Self.currentActivity as? Activity<WorkoutActivityAttributes> {
-                Task {
-                    await activity.end(dismissalPolicy: .immediate)
-                    Self.currentActivity = nil
+            Task {
+                for act in Activity<WorkoutActivityAttributes>.activities {
+                    await act.end(dismissalPolicy: .immediate)
                 }
+                Self.currentActivity = nil
             }
             return
         }
@@ -173,6 +246,18 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         let prescribed = data["prescribedTargetText"] as? String ?? "8-11 Target"
         let overload = data["overloadTargetText"] as? String ?? "12+ Overload"
         let increment = data["overloadIncrementText"] as? String ?? "+5 lbs Next"
+        let isRecap = data["isRecap"] as? Bool ?? false
+        let recapLoggedSets = data["recapLoggedSetsText"] as? String ?? ""
+        let recapProgressionHeadline = data["recapProgressionHeadline"] as? String ?? ""
+        let recapNextTarget = data["recapNextTargetText"] as? String ?? ""
+        let recapIsFinalExercise = data["recapIsFinalExercise"] as? Bool ?? false
+
+        let isWarmup = data["isWarmup"] as? Bool ?? false
+        let warmupIndex = data["warmupIndex"] as? Int ?? 1
+        let totalWarmups = data["totalWarmups"] as? Int ?? 0
+        let warmupTargetText = data["warmupTargetText"] as? String ?? ""
+        let isTransitionRest = data["isTransitionRest"] as? Bool ?? false
+        let nextExerciseName = data["nextExerciseName"] as? String ?? ""
 
         var restEndTimestamp: TimeInterval? = nil
         if isResting && restDuration > 0 {
@@ -192,17 +277,50 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             underTargetText: underTarget,
             prescribedTargetText: prescribed,
             overloadTargetText: overload,
-            overloadIncrementText: increment
+            overloadIncrementText: increment,
+            isRecap: isRecap,
+            recapLoggedSetsText: recapLoggedSets,
+            recapProgressionHeadline: recapProgressionHeadline,
+            recapNextTargetText: recapNextTarget,
+            recapIsFinalExercise: recapIsFinalExercise,
+            isWarmup: isWarmup,
+            warmupIndex: warmupIndex,
+            totalWarmups: totalWarmups,
+            warmupTargetText: warmupTargetText,
+            isTransitionRest: isTransitionRest,
+            nextExerciseName: nextExerciseName
         )
 
+        let activeActivities = Activity<WorkoutActivityAttributes>.activities.filter { $0.activityState == .active }
+
         Task {
-            if let activity = Self.currentActivity as? Activity<WorkoutActivityAttributes> {
-                if #available(iOS 16.2, *) {
-                    await activity.update(ActivityContent(state: contentState, staleDate: nil))
-                } else {
-                    await activity.update(using: contentState)
+            if !activeActivities.isEmpty {
+                Self.currentActivity = activeActivities.first
+                let content = ActivityContent(state: contentState, staleDate: nil)
+                for activity in activeActivities {
+                    if #available(iOS 16.2, *) {
+                        await activity.update(content)
+                    } else {
+                        await activity.update(using: contentState)
+                    }
+                }
+                if activeActivities.count > 1 {
+                    for extra in activeActivities.dropFirst() {
+                        await extra.end(dismissalPolicy: .immediate)
+                    }
                 }
             } else {
+                Self.activityLock.lock()
+                guard !Self.isRequestingActivity else {
+                    Self.activityLock.unlock()
+                    return
+                }
+                Self.isRequestingActivity = true
+                Self.activityLock.unlock()
+
+                for dead in Activity<WorkoutActivityAttributes>.activities {
+                    await dead.end(dismissalPolicy: .immediate)
+                }
                 do {
                     let activity = try Activity<WorkoutActivityAttributes>.request(
                         attributes: WorkoutActivityAttributes(),
@@ -213,6 +331,9 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
                 } catch {
                     print("Error starting Live Activity: \(error)")
                 }
+                Self.activityLock.lock()
+                Self.isRequestingActivity = false
+                Self.activityLock.unlock()
             }
         }
     }

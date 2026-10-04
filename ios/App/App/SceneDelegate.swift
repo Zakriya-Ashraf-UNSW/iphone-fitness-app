@@ -72,24 +72,30 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     @objc private func checkPendingWidgetActions() {
-        guard let defaults = UserDefaults(suiteName: appGroupID),
-              let payload = defaults.dictionary(forKey: "pendingWidgetAction") as? [String: String],
-              let action = payload["action"] else {
-            return
+        guard let defaults = UserDefaults(suiteName: appGroupID) else { return }
+
+        var actionsToProcess: [[String: String]] = []
+        if let queue = defaults.array(forKey: "pendingWidgetActionsQueue") as? [[String: String]], !queue.isEmpty {
+            actionsToProcess = queue
+            defaults.removeObject(forKey: "pendingWidgetActionsQueue")
+        } else if let single = defaults.dictionary(forKey: "pendingWidgetAction") as? [String: String] {
+            actionsToProcess = [single]
         }
-
-        logger.info("Processing pending widget action: \(action)")
-
-        // Clear the pending action immediately to prevent re-processing
         defaults.removeObject(forKey: "pendingWidgetAction")
         defaults.synchronize()
 
-        // Forward to the JS engine
-        var params: [URLQueryItem] = []
-        for (key, value) in payload where key != "action" && key != "timestamp" {
-            params.append(URLQueryItem(name: key, value: value))
+        guard !actionsToProcess.isEmpty else { return }
+
+        for payload in actionsToProcess {
+            guard let action = payload["action"] else { continue }
+            logger.info("Processing queued widget action: \(action)")
+
+            var params: [URLQueryItem] = []
+            for (key, value) in payload where key != "action" && key != "timestamp" {
+                params.append(URLQueryItem(name: key, value: value))
+            }
+            notifyWebviewOfAction(action: action, params: params)
         }
-        notifyWebviewOfAction(action: action, params: params)
     }
 
     // MARK: - Handle overload:// URL actions from Dynamic Island buttons
@@ -126,15 +132,31 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 case "log-triage":
                     let outcome = params?.first(where: { $0.name == "outcome" })?.value ?? "target"
                     state.isTriageLogging = false
-                    state.isResting = true
-                    state.restEndTimestamp = Date().addingTimeInterval(90).timeIntervalSince1970
                     if state.setIndex < state.totalSets {
+                        state.isResting = true
+                        state.restEndTimestamp = Date().addingTimeInterval(90).timeIntervalSince1970
                         state.setIndex += 1
+                    } else {
+                        // Final set completed - awaiting webview progression recap sync
+                        state.isResting = false
+                        state.restEndTimestamp = nil
                     }
                     logger.info("Logged triage outcome: \(outcome)")
 
+                case "continue-next-exercise":
+                    logger.info("Continue next exercise forwarded to webview")
+                    return
+
+                case "log-warmup":
+                    logger.info("Log warmup forwarded to webview")
+                    return
+
+                case "skip-warmup":
+                    logger.info("Skip warmup forwarded to webview")
+                    return
+
                 case "enter-exact":
-                    logger.info("Enter exact reps/weight - forwarding to webview")
+                    logger.info("Enter exact reps/weight - forwarded to webview")
                     return
 
                 default:
@@ -159,8 +181,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             
             if let jsonData = try? JSONSerialization.data(withJSONObject: paramDict),
                let jsonString = String(data: jsonData, encoding: .utf8) {
-                let js = "if (typeof window.handleLiveActivityAction === 'function') { window.handleLiveActivityAction('\(action)', \(jsonString)); }"
-                vc.bridge?.webView?.evaluateJavaScript(js, completionHandler: nil)
+                let js = "if (typeof window.handleLiveActivityAction === 'function') { window.handleLiveActivityAction('\(action)', \(jsonString)); } else { window.__pendingLiveActivityActions = window.__pendingLiveActivityActions || []; window.__pendingLiveActivityActions.push({ action: '\(action)', params: \(jsonString) }); }"
+                vc.bridge?.webView?.evaluateJavaScript(js) { (_, error) in
+                    if let error = error {
+                        logger.error("JavaScript evaluation error: \(error.localizedDescription)")
+                    }
+                }
             }
         }
     }

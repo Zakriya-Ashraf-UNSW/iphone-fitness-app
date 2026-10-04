@@ -16,6 +16,19 @@ public struct WorkoutActivityAttributes: ActivityAttributes {
         public var prescribedTargetText: String   // e.g. "8-11 Target"
         public var overloadTargetText: String     // e.g. "12+ Overload"
         public var overloadIncrementText: String  // e.g. "+5 lbs Next"
+        public var isRecap: Bool                  // true when lift is completed, showing progression recap
+        public var recapLoggedSetsText: String   // e.g. "S1: 10r • S2: 9r • S3: 8r"
+        public var recapProgressionHeadline: String // e.g. "OVERLOAD BREAKTHROUGH"
+        public var recapNextTargetText: String   // e.g. "Next Anchor: 22.5 KG (+2.5 KG)"
+        public var recapIsFinalExercise: Bool    // true if final exercise of workout
+
+        // Warm-up & Transition State
+        public var isWarmup: Bool                // true when executing prescribed warm-up sets
+        public var warmupIndex: Int              // e.g. 1 (for W1)
+        public var totalWarmups: Int             // e.g. 3 (for 3 warmup sets)
+        public var warmupTargetText: String      // e.g. "10 reps @ 60.0 KG (50% Prep)"
+        public var isTransitionRest: Bool        // true during automatic inter-exercise rest countdown
+        public var nextExerciseName: String      // e.g. "Incline Dumbbell Press"
 
         public init(
             splitName: String = "PUSH",
@@ -30,7 +43,18 @@ public struct WorkoutActivityAttributes: ActivityAttributes {
             underTargetText: String = "< 8 Missed",
             prescribedTargetText: String = "8-11 Target",
             overloadTargetText: String = "12+ Overload",
-            overloadIncrementText: String = "+5 lbs Next"
+            overloadIncrementText: String = "+5 lbs Next",
+            isRecap: Bool = false,
+            recapLoggedSetsText: String = "",
+            recapProgressionHeadline: String = "",
+            recapNextTargetText: String = "",
+            recapIsFinalExercise: Bool = false,
+            isWarmup: Bool = false,
+            warmupIndex: Int = 1,
+            totalWarmups: Int = 0,
+            warmupTargetText: String = "",
+            isTransitionRest: Bool = false,
+            nextExerciseName: String = ""
         ) {
             self.splitName = splitName
             self.exerciseName = exerciseName
@@ -45,6 +69,17 @@ public struct WorkoutActivityAttributes: ActivityAttributes {
             self.prescribedTargetText = prescribedTargetText
             self.overloadTargetText = overloadTargetText
             self.overloadIncrementText = overloadIncrementText
+            self.isRecap = isRecap
+            self.recapLoggedSetsText = recapLoggedSetsText
+            self.recapProgressionHeadline = recapProgressionHeadline
+            self.recapNextTargetText = recapNextTargetText
+            self.recapIsFinalExercise = recapIsFinalExercise
+            self.isWarmup = isWarmup
+            self.warmupIndex = warmupIndex
+            self.totalWarmups = totalWarmups
+            self.warmupTargetText = warmupTargetText
+            self.isTransitionRest = isTransitionRest
+            self.nextExerciseName = nextExerciseName
         }
     }
 
