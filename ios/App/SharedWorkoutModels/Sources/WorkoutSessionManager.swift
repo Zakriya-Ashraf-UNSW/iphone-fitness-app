@@ -10,6 +10,7 @@ public final class WorkoutSessionManager: ObservableObject {
     @Published public var exercises: [Exercise] = []
     @Published public var activeExerciseIndex: Int = 0
     @Published public var isRoutineActive: Bool = false
+    @Published public var isMuted: Bool = false
 
     // Chamber State
     @Published public var activeSetIndex: Int = 1
@@ -61,6 +62,81 @@ public final class WorkoutSessionManager: ObservableObject {
 
     public func reloadData() {
         self.exercises = WorkoutStore.shared.loadExercises()
+    }
+
+    // MARK: - Exercise Management
+
+    public func addExercise(_ exercise: Exercise) {
+        exercises.append(exercise)
+        WorkoutStore.shared.saveExercises(exercises)
+        Theme.hapticNotification(.success)
+    }
+
+    public func updateExercise(_ exercise: Exercise) {
+        if let idx = exercises.firstIndex(where: { $0.id == exercise.id }) {
+            exercises[idx] = exercise
+            WorkoutStore.shared.saveExercises(exercises)
+            Theme.hapticNotification(.success)
+        }
+    }
+
+    public func deleteExercise(id: String) {
+        exercises.removeAll(where: { $0.id == id })
+        WorkoutStore.shared.saveExercises(exercises)
+        if activeExerciseIndex >= exercisesForCurrentSplit.count {
+            activeExerciseIndex = max(0, exercisesForCurrentSplit.count - 1)
+        }
+        Theme.hapticNotification(.warning)
+    }
+
+    public func applyCalibration(exerciseId: String, e1RM: Double, fatigueIndex: Double, loads: [Double]) {
+        guard let idx = exercises.firstIndex(where: { $0.id == exerciseId }) else { return }
+        var ex = exercises[idx]
+        ex.isCalibrated = true
+        ex.e1RM = e1RM
+        ex.fatigueIndex = fatigueIndex
+        ex.loads = loads
+        ex.weight = loads.first ?? ex.weight
+        ex.sessionsSinceRecalibration = 0
+        exercises[idx] = ex
+        WorkoutStore.shared.saveExercises(exercises)
+        Theme.hapticNotification(.success)
+        AudioManager.shared.playFanfare()
+    }
+
+    public func resetExerciseCalibration(id: String) {
+        guard let idx = exercises.firstIndex(where: { $0.id == id }) else { return }
+        var ex = exercises[idx]
+        ex.isCalibrated = false
+        ex.e1RM = 0.0
+        ex.fatigueIndex = 0.0
+        ex.sessionsSinceRecalibration = 0
+        exercises[idx] = ex
+        WorkoutStore.shared.saveExercises(exercises)
+        Theme.hapticNotification(.warning)
+    }
+
+    public func resetAllCalibration() {
+        for i in exercises.indices {
+            exercises[i].isCalibrated = false
+            exercises[i].e1RM = 0.0
+            exercises[i].fatigueIndex = 0.0
+            exercises[i].sessionsSinceRecalibration = 0
+        }
+        WorkoutStore.shared.saveExercises(exercises)
+        Theme.hapticNotification(.warning)
+    }
+
+    public func restoreDefaults() {
+        self.exercises = WorkoutStore.shared.restoreDefaultExercises()
+        self.activeExerciseIndex = 0
+        Theme.hapticNotification(.success)
+    }
+
+    public func toggleMute() {
+        isMuted.toggle()
+        AudioManager.shared.isMuted = isMuted
+        Theme.hapticImpact(.light)
     }
 
     // MARK: - Routine & Exercise Control
@@ -181,27 +257,36 @@ public final class WorkoutSessionManager: ObservableObject {
 
     // MARK: - Working Set Triage & Advancements
 
-    public func logSet1(outcome: String) {
+    public func logSet1(outcome: String, customReps: Int? = nil) {
         guard let ex = currentExercise else { return }
         self.s1Outcome = outcome
         Theme.hapticImpact(.medium)
 
         let targetReps = ex.repWindowMax
         let repsLogged: Int
+        if let custom = customReps {
+            repsLogged = custom
+        } else {
+            switch outcome {
+            case "overload":
+                repsLogged = targetReps + 1
+            case "target":
+                repsLogged = targetReps
+            default:
+                repsLogged = max(0, ex.repWindowMin - 1)
+            }
+        }
+
         switch outcome {
         case "overload":
-            repsLogged = targetReps + 1
             s1Verdict = "Verdict: Hypertrophy overload confirmed! Anchor load primed for promotion."
         case "target":
-            repsLogged = targetReps
             s1Verdict = "Verdict: Target window satisfied (\(ex.repWindowMin)–\(ex.repWindowMax) reps). Anchor load maintained."
         default:
-            repsLogged = max(0, ex.repWindowMin - 1)
             s1Verdict = "Verdict: Set 1 under threshold (< \(ex.repWindowMin) reps). Maintain anchor load & extend rest."
         }
         loggedReps[0] = repsLogged
 
-        // Auto-start rest for Set 2
         preparePrescribedRestUI(forSet: 2, autoStart: true)
         syncLiveActivity()
     }
@@ -216,74 +301,144 @@ public final class WorkoutSessionManager: ObservableObject {
         syncLiveActivity()
     }
 
-    public func logSet2(outcome: String) {
+    public func logSet2(outcome: String, customReps: Int? = nil) {
         guard let ex = currentExercise else { return }
         self.s2Outcome = outcome
         Theme.hapticImpact(.medium)
 
+        let targetReps = ex.repWindowMax
         let repsLogged: Int
+        if let custom = customReps {
+            repsLogged = custom
+        } else {
+            switch outcome {
+            case "overload":
+                repsLogged = targetReps + 1
+            case "target":
+                repsLogged = targetReps
+            default:
+                repsLogged = max(0, ex.repWindowMin - 1)
+            }
+        }
+
         switch outcome {
         case "overload":
-            repsLogged = ex.repWindowMax + 1
-            s2Verdict = "Verdict: Overload sustained on Intermediate load (\(ex.loads.indices.contains(1) ? ex.loads[1] : ex.weight) \(ex.unit))."
+            s2Verdict = "Verdict: Set 2 overload cleared. Intermediate foundation advancing."
         case "target":
-            repsLogged = ex.repWindowMax
-            s2Verdict = "Verdict: Target hypertrophy reps completed on Set 2."
+            s2Verdict = "Verdict: Set 2 within target rep window."
         default:
-            repsLogged = max(0, ex.repWindowMin - 1)
-            s2Verdict = "Verdict: Set 2 under target reps. Working foundation held."
+            s2Verdict = "Verdict: Set 2 under threshold (< \(ex.repWindowMin) reps)."
         }
         loggedReps[1] = repsLogged
 
-        if ex.activeSetsCount > 2 {
-            preparePrescribedRestUI(forSet: 3, autoStart: true)
+        if ex.activeSetsCount == 2 {
+            completeExerciseAndEvaluateRecap()
         } else {
-            stopRestTimer()
+            let resolution = DPOEngine.resolveSet3Parameters(
+                loads: ex.loads,
+                category: ex.category,
+                microIncrement: ex.microIncrement,
+                fatigueIndex: ex.fatigueIndex,
+                pacingMode: "FAST_PACED"
+            )
+            self.restTimerPrescribed = resolution.restTimerSeconds
+            self.restTimerRemaining = resolution.restTimerSeconds
+            self.restTimerLabel = "REST FOR SET 3 (BASE OVERLOAD)"
+            self.restTimerReason = resolution.loadDroppedForFatigue ? "Fatigue-Coupled 60% Floor Drop" : "Standard Prescribed Rest"
+            startRestTimer(seconds: resolution.restTimerSeconds, label: restTimerLabel, reason: restTimerReason)
+            syncLiveActivity()
         }
-        syncLiveActivity()
     }
 
-    public func logSet3(outcome: String) {
+    public func logSet3(outcome: String, customReps: Int? = nil) {
         guard let ex = currentExercise else { return }
         self.s3Outcome = outcome
         Theme.hapticImpact(.medium)
 
+        let targetReps = ex.repWindowMax
         let repsLogged: Int
+        if let custom = customReps {
+            repsLogged = custom
+        } else {
+            switch outcome {
+            case "overload":
+                repsLogged = targetReps + 1
+            case "target":
+                repsLogged = targetReps
+            default:
+                repsLogged = max(0, ex.repWindowMin - 1)
+            }
+        }
+
         switch outcome {
         case "overload":
-            repsLogged = ex.repWindowMax + 1
-            s3Verdict = "Verdict: Full volume completed with overload reserve!"
+            s3Verdict = "Verdict: Bottom cascade overload satisfied! Next cycle primed."
         case "target":
-            repsLogged = ex.repWindowMax
-            s3Verdict = "Verdict: Target base reps achieved. Hypertrophy volume locked in."
+            s3Verdict = "Verdict: Base set volume maintained."
         default:
-            repsLogged = max(0, ex.repWindowMin - 1)
-            s3Verdict = "Verdict: Base set completed under target. Floor maintained."
+            s3Verdict = "Verdict: Base set under threshold (< \(ex.repWindowMin) reps)."
         }
         loggedReps[2] = repsLogged
-        stopRestTimer()
-        syncLiveActivity()
+
+        completeExerciseAndEvaluateRecap()
     }
 
-    // MARK: - Exercise Completion & Recap
+    // MARK: - Post-Exercise Recap & History Logging
 
     public func commitCurrentExercise() {
+        completeExerciseAndEvaluateRecap()
+    }
+
+    public func completeExerciseAndEvaluateRecap() {
         guard var ex = currentExercise else { return }
-        Theme.hapticNotification(.success)
+        stopRestTimer()
 
-        let outcome = DPOEngine.evaluateProgression(exercise: ex, repsCompleted: loggedReps)
+        let outcome: ProgressionOutcome
+        let anyMissed = (loggedReps[0] < ex.repWindowMin) ||
+                        (loggedReps[1] < ex.repWindowMin) ||
+                        (ex.activeSetsCount == 3 && loggedReps[2] < ex.repWindowMin)
+
+        if anyMissed {
+            let missedResult = DPOEngine.handleMissedReps(
+                loads: ex.loads,
+                reps: loggedReps,
+                activeSetsCount: ex.activeSetsCount,
+                repMin: ex.repWindowMin,
+                microIncrement: ex.microIncrement,
+                consecutiveFailures: ex.consecutiveSet3Failures
+            )
+            ex.loads = missedResult.loads
+            ex.weight = missedResult.loads.first ?? ex.weight
+            ex.activeSetsCount = missedResult.activeSetsCount
+            ex.consecutiveSet3Failures = missedResult.consecutiveFailures
+            outcome = ProgressionOutcome(
+                loads: missedResult.loads,
+                s1Adv: false,
+                s2Adv: false,
+                s3Adv: false,
+                s1HeldReason: missedResult.summary,
+                summary: missedResult.summary
+            )
+        } else {
+            outcome = DPOEngine.evaluateProgression(
+                loads: ex.loads,
+                reps: loggedReps,
+                activeSetsCount: ex.activeSetsCount,
+                repMax: ex.repWindowMax,
+                microIncrement: ex.microIncrement
+            )
+            ex.loads = outcome.loads
+            ex.weight = outcome.loads.first ?? ex.weight
+        }
+
         self.recapOutcome = outcome
-
-        // Update exercise state & save
-        ex.loads = outcome.loads
-        ex.weight = outcome.loads.first ?? ex.weight
+        ex.sessionsSinceRecalibration += 1
         ex.e1RM = DPOEngine.calculateE1RM(load: ex.weight, reps: Double(loggedReps[0]))
         if let idx = exercises.firstIndex(where: { $0.id == ex.id }) {
             exercises[idx] = ex
             WorkoutStore.shared.saveExercises(exercises)
         }
 
-        // Save history entry
         let historyEntry = WorkoutHistoryEntry(
             exerciseId: ex.id,
             exerciseName: ex.name,
@@ -305,6 +460,9 @@ public final class WorkoutSessionManager: ObservableObject {
         WorkoutStore.shared.appendHistoryEntry(historyEntry)
 
         self.isRecapShowing = true
+        if outcome.s1Adv {
+            AudioManager.shared.playFanfare()
+        }
         syncLiveActivity()
     }
 
@@ -320,10 +478,10 @@ public final class WorkoutSessionManager: ObservableObject {
             startRestTimer(seconds: 120, label: "TRANSITION TO \(list[nextIndex].name.uppercased())", reason: "Inter-Exercise Recovery")
             syncLiveActivity()
         } else {
-            // Workout Routine Complete!
             self.isRoutineActive = false
             self.isTransitionRestMode = false
             Theme.hapticNotification(.success)
+            AudioManager.shared.playFanfare()
             if #available(iOS 16.1, *) {
                 LiveActivityManager.shared.endActivity()
             }
@@ -399,7 +557,8 @@ public final class WorkoutSessionManager: ObservableObject {
             self.restTimerRemaining = 0
             self.restTimerRunning = false
             self.restEndTime = nil
-            Theme.hapticNotification(.success)
+            Theme.hapticSuccess()
+            AudioManager.shared.playTimerComplete()
 
             if isTransitionRestMode {
                 skipTransitionRest()
@@ -408,9 +567,12 @@ public final class WorkoutSessionManager: ObservableObject {
             }
         } else {
             self.restTimerRemaining = remaining
-            // Haptic countdown alert on last 3 seconds
-            if remaining <= 3 {
-                Theme.hapticImpact(.light)
+            // Countdown sensory feedback on last 5 seconds
+            if remaining <= 5 {
+                Theme.hapticTick()
+                if remaining <= 3 {
+                    AudioManager.shared.playCountdownTick()
+                }
             }
         }
     }

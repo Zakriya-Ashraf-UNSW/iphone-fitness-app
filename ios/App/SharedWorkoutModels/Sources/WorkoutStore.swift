@@ -1,5 +1,12 @@
 import Foundation
 
+public struct BackupPayload: Codable {
+    public var version: Int = 1
+    public var timestamp: Date = Date()
+    public var exercises: [Exercise]
+    public var history: [WorkoutHistoryEntry]
+}
+
 public final class WorkoutStore: @unchecked Sendable {
     public static let shared = WorkoutStore()
 
@@ -31,7 +38,10 @@ public final class WorkoutStore: @unchecked Sendable {
            !list.isEmpty {
             return list
         }
-        // Fallback to bundled default_exercises.json
+        return loadBundledDefaultExercises()
+    }
+
+    public func loadBundledDefaultExercises() -> [Exercise] {
         if let bundleURL = Bundle.module.url(forResource: "default_exercises", withExtension: "json"),
            let data = try? Data(contentsOf: bundleURL),
            let list = try? JSONDecoder().decode([Exercise].self, from: data) {
@@ -41,8 +51,16 @@ public final class WorkoutStore: @unchecked Sendable {
         return []
     }
 
+    public func restoreDefaultExercises() -> [Exercise] {
+        let bundled = loadBundledDefaultExercises()
+        saveExercises(bundled)
+        return bundled
+    }
+
     public func saveExercises(_ exercises: [Exercise]) {
-        if let data = try? JSONEncoder().encode(exercises) {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        if let data = try? encoder.encode(exercises) {
             try? data.write(to: exercisesFileURL, options: .atomic)
         }
     }
@@ -57,7 +75,9 @@ public final class WorkoutStore: @unchecked Sendable {
     }
 
     public func saveHistory(_ history: [WorkoutHistoryEntry]) {
-        if let data = try? JSONEncoder().encode(history) {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        if let data = try? encoder.encode(history) {
             try? data.write(to: historyFileURL, options: .atomic)
         }
     }
@@ -66,5 +86,39 @@ public final class WorkoutStore: @unchecked Sendable {
         var hist = loadHistory()
         hist.insert(entry, at: 0)
         saveHistory(hist)
+    }
+
+    public func clearHistory() {
+        saveHistory([])
+    }
+
+    // MARK: - Backup and Restore Payload
+
+    public func exportBackupPayload() -> Data? {
+        let exercises = loadExercises()
+        let history = loadHistory()
+        let payload = BackupPayload(version: 1, timestamp: Date(), exercises: exercises, history: history)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        return try? encoder.encode(payload)
+    }
+
+    public func importBackupPayload(_ data: Data) -> Bool {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        if let payload = try? decoder.decode(BackupPayload.self, from: data) {
+            if !payload.exercises.isEmpty {
+                saveExercises(payload.exercises)
+            }
+            saveHistory(payload.history)
+            return true
+        }
+        // Fallback: check if raw array of [Exercise]
+        if let exercises = try? decoder.decode([Exercise].self, from: data), !exercises.isEmpty {
+            saveExercises(exercises)
+            return true
+        }
+        return false
     }
 }

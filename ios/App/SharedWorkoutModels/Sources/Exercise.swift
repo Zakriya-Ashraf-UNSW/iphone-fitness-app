@@ -16,18 +16,40 @@ public enum WorkoutSplit: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-public enum ExerciseCategory: String, Codable {
+public enum ExerciseCategory: String, Codable, CaseIterable, Identifiable {
     case heavyCompound = "HEAVY_COMPOUND"
     case machineCompound = "MACHINE_COMPOUND"
     case isolation = "ISOLATION"
+
+    public var id: String { rawValue }
+
+    public var displayName: String {
+        switch self {
+        case .heavyCompound: return "Heavy Compound"
+        case .machineCompound: return "Machine Compound"
+        case .isolation: return "Isolation"
+        }
+    }
 }
 
-public enum EquipmentType: String, Codable {
+public enum EquipmentType: String, Codable, CaseIterable, Identifiable {
     case machineLever = "MACHINE_LEVER"
     case cableStack = "CABLE_STACK"
     case barbell = "BARBELL"
     case dumbbell = "DUMBBELL"
     case bodyweightLoaded = "BODYWEIGHT_LOADED"
+
+    public var id: String { rawValue }
+
+    public var displayName: String {
+        switch self {
+        case .machineLever: return "Machine Lever"
+        case .cableStack: return "Cable Stack"
+        case .barbell: return "Barbell"
+        case .dumbbell: return "Dumbbell"
+        case .bodyweightLoaded: return "Bodyweight Loaded"
+        }
+    }
 }
 
 public struct Exercise: Codable, Identifiable, Hashable {

@@ -4,33 +4,81 @@ public struct ExerciseHubView: View {
     @ObservedObject var manager: WorkoutSessionManager
     @Binding var selectedTab: Int
 
+    @State private var searchQuery: String = ""
+    @State private var selectedCategory: ExerciseCategory? = nil
+    @State private var showAddExerciseSheet: Bool = false
+    @State private var exerciseToEdit: Exercise? = nil
+
     public init(manager: WorkoutSessionManager, selectedTab: Binding<Int>) {
         self.manager = manager
         self._selectedTab = selectedTab
     }
 
+    private var filteredExercises: [Exercise] {
+        manager.exercisesForCurrentSplit.filter { ex in
+            if let cat = selectedCategory, ex.category != cat { return false }
+            if !searchQuery.isEmpty && !ex.name.localizedCaseInsensitiveContains(searchQuery) && !ex.muscleGroup.localizedCaseInsensitiveContains(searchQuery) {
+                return false
+            }
+            return true
+        }
+    }
+
     public var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                // Split Selector
-                splitSelector
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Split Selector
+                    splitSelector
 
-                // Start Routine Banner
-                routineBanner
+                    // Search & Category Filters
+                    searchAndFilters
 
-                // Exercise Cards
-                VStack(spacing: 12) {
-                    ForEach(manager.exercisesForCurrentSplit) { exercise in
-                        exerciseRow(exercise)
+                    // Start Routine Banner
+                    routineBanner
+
+                    // Exercise List
+                    if filteredExercises.isEmpty {
+                        emptyState
+                    } else {
+                        VStack(spacing: 12) {
+                            ForEach(filteredExercises) { exercise in
+                                exerciseRow(exercise)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 32)
+            }
+            .background(Theme.background.ignoresSafeArea())
+            .navigationTitle("Lifts Hub")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: {
+                        Theme.hapticImpact(.light)
+                        showAddExerciseSheet = true
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add Lift")
+                        }
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(Theme.emerald)
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 32)
+            .sheet(isPresented: $showAddExerciseSheet) {
+                AddEditExerciseSheet(manager: manager)
+            }
+            .sheet(item: $exerciseToEdit) { ex in
+                AddEditExerciseSheet(manager: manager, exerciseToEdit: ex)
+            }
         }
-        .background(Theme.background.ignoresSafeArea())
     }
+
+    // MARK: - Subviews
 
     private var splitSelector: some View {
         HStack(spacing: 8) {
@@ -56,6 +104,54 @@ public struct ExerciseHubView: View {
         }
     }
 
+    private var searchAndFilters: some View {
+        VStack(spacing: 10) {
+            // Search Bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(Theme.textMuted)
+                TextField("Search lifts by name or muscle...", text: $searchQuery)
+                    .font(.system(size: 13))
+                    .foregroundColor(Theme.textPrimary)
+                if !searchQuery.isEmpty {
+                    Button(action: { searchQuery = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(Theme.textMuted)
+                    }
+                }
+            }
+            .padding(10)
+            .background(Theme.surfaceElevated)
+            .cornerRadius(10)
+
+            // Category Filter Pills
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    categoryPill(title: "ALL", category: nil)
+                    ForEach(ExerciseCategory.allCases) { cat in
+                        categoryPill(title: cat.displayName, category: cat)
+                    }
+                }
+            }
+        }
+    }
+
+    private func categoryPill(title: String, category: ExerciseCategory?) -> some View {
+        let isSelected = selectedCategory == category
+        return Button(action: {
+            Theme.hapticImpact(.light)
+            selectedCategory = category
+        }) {
+            Text(title)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(isSelected ? .black : Theme.textPrimary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(isSelected ? Theme.emerald : Theme.surfaceElevated)
+                .cornerRadius(16)
+        }
+    }
+
     private var routineBanner: some View {
         Button(action: {
             manager.startRoutine(split: manager.currentSplit)
@@ -66,7 +162,7 @@ public struct ExerciseHubView: View {
                     Text("START \(manager.currentSplit.rawValue) WORKOUT")
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundColor(.black)
-                    Text("\(manager.exercisesForCurrentSplit.count) Hypertrophy Lifts • Progressive Overload Active")
+                    Text("\(manager.exercisesForCurrentSplit.count) Lifts • Progressive Overload Engine Active")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.black.opacity(0.8))
                 }
@@ -91,13 +187,37 @@ public struct ExerciseHubView: View {
         VStack(spacing: 12) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(exercise.name)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundColor(Theme.textPrimary)
-                    Text("\(exercise.muscleGroup) • \(exercise.category.rawValue.replacingOccurrences(of: "_", with: " "))")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(Theme.textSecondary)
+                    HStack(spacing: 6) {
+                        Text(exercise.name)
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundColor(Theme.textPrimary)
+
+                        Button(action: {
+                            exerciseToEdit = exercise
+                        }) {
+                            Image(systemName: "pencil.circle")
+                                .font(.system(size: 15))
+                                .foregroundColor(Theme.textMuted)
+                        }
+                    }
+
+                    HStack(spacing: 6) {
+                        Text(exercise.muscleGroup)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(Theme.emerald)
+                        Text("•")
+                            .foregroundColor(Theme.textMuted)
+                        Text(exercise.equipmentType.displayName)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(Theme.textSecondary)
+                        Text("•")
+                            .foregroundColor(Theme.textMuted)
+                        Text("\(exercise.repWindowMin)–\(exercise.repWindowMax)r")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(Theme.sky)
+                    }
                 }
+
                 Spacer()
 
                 Button(action: {
@@ -122,14 +242,14 @@ public struct ExerciseHubView: View {
                 }
             }
 
-            // Loads Badges
+            // Loads Row
             HStack(spacing: 8) {
-                loadBadge(label: "SET 1", load: exercise.loads.first ?? exercise.weight, unit: exercise.unit)
+                loadBadge(label: "SET 1", load: exercise.loads.first ?? exercise.weight, unit: exercise.unit, highlight: Theme.emerald)
                 if exercise.loads.count > 1 {
-                    loadBadge(label: "SET 2", load: exercise.loads[1], unit: exercise.unit)
+                    loadBadge(label: "SET 2", load: exercise.loads[1], unit: exercise.unit, highlight: Theme.cyan)
                 }
                 if exercise.loads.count > 2 && exercise.activeSetsCount > 2 {
-                    loadBadge(label: "SET 3", load: exercise.loads[2], unit: exercise.unit)
+                    loadBadge(label: "SET 3", load: exercise.loads[2], unit: exercise.unit, highlight: Theme.amber)
                 }
                 Spacer()
 
@@ -137,8 +257,8 @@ public struct ExerciseHubView: View {
                     Text("e1RM")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(Theme.textMuted)
-                    Text(String(format: "%.0f %@", exercise.e1RM, exercise.unit))
-                        .font(.system(size: 13, weight: .bold))
+                    Text(exercise.e1RM > 0 ? String(format: "%.1f %@", exercise.e1RM, exercise.unit) : "—")
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundColor(Theme.textPrimary)
                 }
             }
@@ -146,24 +266,34 @@ public struct ExerciseHubView: View {
         .padding(14)
         .background(Theme.surfaceElevated)
         .cornerRadius(14)
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Theme.border, lineWidth: 1)
-        )
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.border, lineWidth: 1))
     }
 
-    private func loadBadge(label: String, load: Double, unit: String) -> some View {
+    private func loadBadge(label: String, load: Double, unit: String, highlight: Color) -> some View {
         VStack(spacing: 2) {
             Text(label)
-                .font(.system(size: 9, weight: .bold))
-                .foregroundColor(Theme.textMuted)
+                .font(.system(size: 8, weight: .bold))
+                .foregroundColor(highlight)
             Text(String(format: "%.1f", load))
-                .font(.system(size: 14, weight: .heavy, design: .rounded))
+                .font(.system(size: 13, weight: .heavy, design: .rounded))
                 .foregroundColor(Theme.textPrimary)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Theme.surfaceCard)
         .cornerRadius(6)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "dumbbell")
+                .font(.system(size: 32))
+                .foregroundColor(Theme.textMuted)
+            Text("No lifts found for this filter.")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(Theme.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
     }
 }
