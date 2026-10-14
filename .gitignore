@@ -2,21 +2,31 @@
 node_modules/
 package-lock.json
 
-# iOS build artifacts
-ios/App/Pods/
-ios/App/App.xcworkspace/xcuserdata/
-ios/App/App.xcodeproj/xcuserdata/
-ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
-*.xcuserstate
+# Build Packages and Archives
+*.ipa
+*.xcarchive
+*.dSYM.zip
+
+# Xcode & SwiftPM Build Artifacts
 DerivedData/
+**/DerivedData/
 .build/
+**/.build/
 .swiftpm/
+**/.swiftpm/
 xcuserdata/
+**/xcuserdata/
+*.xcuserstate
+ios/App/Pods/
+ios/App/App/public/
 
-# OS files
+# OS & Editor files
 .DS_Store
+**/.DS_Store
 Thumbs.db
+*.swp
+*~
 
-# Agents and local skills
-.agents/
-
+# Temporary Agent Caches
+.agents/tmp/
+.agents/cache/

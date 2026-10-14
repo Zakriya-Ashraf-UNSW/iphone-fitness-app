@@ -192,6 +192,16 @@ public struct ExerciseHubView: View {
                             .font(.system(size: 16, weight: .bold, design: .rounded))
                             .foregroundColor(Theme.textPrimary)
 
+                        if exercise.isAssisted {
+                            Text("ASSIST")
+                                .font(.system(size: 8, weight: .black))
+                                .foregroundColor(.black)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(Theme.purple)
+                                .cornerRadius(4)
+                        }
+
                         Button(action: {
                             exerciseToEdit = exercise
                         }) {
@@ -244,22 +254,28 @@ public struct ExerciseHubView: View {
 
             // Loads Row
             HStack(spacing: 8) {
-                loadBadge(label: "SET 1", load: exercise.loads.first ?? exercise.weight, unit: exercise.unit, highlight: Theme.emerald)
+                loadBadge(label: "SET 1", load: exercise.loads.first ?? exercise.weight, unit: exercise.unit, isAssisted: exercise.isAssisted, highlight: Theme.emerald)
                 if exercise.loads.count > 1 {
-                    loadBadge(label: "SET 2", load: exercise.loads[1], unit: exercise.unit, highlight: Theme.cyan)
+                    loadBadge(label: "SET 2", load: exercise.loads[1], unit: exercise.unit, isAssisted: exercise.isAssisted, highlight: Theme.cyan)
                 }
                 if exercise.loads.count > 2 && exercise.activeSetsCount > 2 {
-                    loadBadge(label: "SET 3", load: exercise.loads[2], unit: exercise.unit, highlight: Theme.amber)
+                    loadBadge(label: "SET 3", load: exercise.loads[2], unit: exercise.unit, isAssisted: exercise.isAssisted, highlight: Theme.amber)
                 }
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("e1RM")
+                    Text(exercise.isAssisted ? "ASSIST FLOOR" : "e1RM")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(Theme.textMuted)
-                    Text(exercise.e1RM > 0 ? String(format: "%.1f %@", exercise.e1RM, exercise.unit) : "—")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(Theme.textPrimary)
+                    if exercise.isAssisted {
+                        Text(String(format: "%.0f %@", exercise.effectiveMinWeight, exercise.unit))
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(Theme.purple)
+                    } else {
+                        Text(exercise.e1RM > 0 ? String(format: "%.1f %@", exercise.e1RM, exercise.unit) : "—")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(Theme.textPrimary)
+                    }
                 }
             }
         }
@@ -269,14 +285,21 @@ public struct ExerciseHubView: View {
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.border, lineWidth: 1))
     }
 
-    private func loadBadge(label: String, load: Double, unit: String, highlight: Color) -> some View {
+    private func loadBadge(label: String, load: Double, unit: String, isAssisted: Bool = false, highlight: Color) -> some View {
         VStack(spacing: 2) {
             Text(label)
                 .font(.system(size: 8, weight: .bold))
                 .foregroundColor(highlight)
-            Text(String(format: "%.1f", load))
-                .font(.system(size: 13, weight: .heavy, design: .rounded))
-                .foregroundColor(Theme.textPrimary)
+            HStack(spacing: 2) {
+                Text(String(format: "%.1f", load))
+                    .font(.system(size: 13, weight: .heavy, design: .rounded))
+                    .foregroundColor(Theme.textPrimary)
+                if isAssisted {
+                    Text("ast")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(Theme.purple)
+                }
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)

@@ -18,8 +18,15 @@ public struct WorkoutHistoryEntry: Codable, Identifiable, Hashable {
     public var fatigueIndex: Double
     public var e1RM: Double
     public var progressionSummary: String
+    public var isAssisted: Bool?
+    public var isCalibration: Bool?
+    public var entryType: String?
     public var timestamp: String
     public var dateString: String
+
+    public var isCalibrationEntry: Bool {
+        return isCalibration == true || entryType?.uppercased() == "CALIBRATION"
+    }
 
     public init(
         id: String = UUID().uuidString,
@@ -39,6 +46,9 @@ public struct WorkoutHistoryEntry: Codable, Identifiable, Hashable {
         fatigueIndex: Double,
         e1RM: Double,
         progressionSummary: String,
+        isAssisted: Bool? = false,
+        isCalibration: Bool? = false,
+        entryType: String? = "WORKOUT",
         timestamp: String = ISO8601DateFormatter().string(from: Date()),
         dateString: String = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .short)
     ) {
@@ -59,6 +69,9 @@ public struct WorkoutHistoryEntry: Codable, Identifiable, Hashable {
         self.fatigueIndex = fatigueIndex
         self.e1RM = e1RM
         self.progressionSummary = progressionSummary
+        self.isAssisted = isAssisted
+        self.isCalibration = isCalibration
+        self.entryType = entryType
         self.timestamp = timestamp
         self.dateString = dateString
     }

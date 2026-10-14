@@ -143,9 +143,20 @@ public struct CalibrationHubView: View {
             // Title & Status
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(exercise.name)
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(Theme.textPrimary)
+                    HStack(spacing: 6) {
+                        Text(exercise.name)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(Theme.textPrimary)
+                        if exercise.isAssisted {
+                            Text("ASSIST")
+                                .font(.system(size: 8, weight: .black))
+                                .foregroundColor(.black)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(Theme.purple)
+                                .cornerRadius(4)
+                        }
+                    }
                     HStack(spacing: 6) {
                         Text(exercise.split)
                             .font(.system(size: 10, weight: .black))
@@ -155,6 +166,22 @@ public struct CalibrationHubView: View {
                         Text(exercise.category.displayName)
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundColor(Theme.textSecondary)
+                        if exercise.isAssisted {
+                            Text("•")
+                                .foregroundColor(Theme.textMuted)
+                            Text("Max: \(String(format: "%.0f", exercise.effectiveMaxWeight)) \(exercise.unit)")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(Theme.purple)
+                        } else if exercise.minWeight != nil || exercise.maxWeight != nil {
+                            Text("•")
+                                .foregroundColor(Theme.textMuted)
+                            let minStr = exercise.minWeight != nil ? "Min: \(String(format: "%.0f", exercise.effectiveMinWeight))" : ""
+                            let maxStr = exercise.maxWeight != nil ? "Max: \(String(format: "%.0f", exercise.effectiveMaxWeight))" : ""
+                            let sep = (!minStr.isEmpty && !maxStr.isEmpty) ? " • " : ""
+                            Text("\(minStr)\(sep)\(maxStr) \(exercise.unit)")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(Theme.sky)
+                        }
                     }
                 }
 
@@ -170,7 +197,10 @@ public struct CalibrationHubView: View {
             HStack(spacing: 12) {
                 metricColumn(label: "e1RM", value: exercise.isCalibrated ? String(format: "%.1f %@", exercise.e1RM, exercise.unit) : "—")
                 metricColumn(label: "Fatigue (FI)", value: exercise.isCalibrated ? String(format: "%.3f", exercise.fatigueIndex) : "—")
-                metricColumn(label: "Recalib Count", value: "\(exercise.sessionsSinceRecalibration) / 5 sess")
+                metricColumn(
+                    label: exercise.isAssisted ? "Anchor Pin" : "Anchor Load",
+                    value: exercise.loads.isEmpty ? "—" : String(format: "%.1f %@%@", exercise.loads[0], exercise.unit, exercise.isAssisted ? " Assist" : "")
+                )
             }
 
             // Action Buttons

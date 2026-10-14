@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 public struct CalibrationRunnerView: View {
     @ObservedObject var manager: WorkoutSessionManager
@@ -7,8 +8,11 @@ public struct CalibrationRunnerView: View {
 
     @State private var step: Int = 1 // 1: Set 1, 2: 180s Rest, 3: Set 2, 4: Verdict
     @State private var set1Load: Double
+    @State private var set1LoadString: String
     @State private var set1Reps: Int
+    @State private var set1RepsString: String
     @State private var set2Reps: Int
+    @State private var set2RepsString: String
     @State private var restSecondsRemaining: Int = 180
     @State private var isRestTimerRunning: Bool = false
     @State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -21,13 +25,27 @@ public struct CalibrationRunnerView: View {
     public init(manager: WorkoutSessionManager, exercise: Exercise) {
         self.manager = manager
         self.exercise = exercise
-        _set1Load = State(initialValue: exercise.weight > 0 ? exercise.weight : 50.0)
+        let defaultLoad = exercise.weight > 0 ? exercise.weight : (exercise.isAssisted ? 50.0 : 50.0)
+        let clampedLoad = min(exercise.effectiveMaxWeight, max(exercise.effectiveMinWeight, defaultLoad))
+        _set1Load = State(initialValue: clampedLoad)
+        _set1LoadString = State(initialValue: String(format: "%.1f", clampedLoad))
         _set1Reps = State(initialValue: exercise.repWindowMax)
+        _set1RepsString = State(initialValue: "\(exercise.repWindowMax)")
         _set2Reps = State(initialValue: max(1, exercise.repWindowMin))
+        _set2RepsString = State(initialValue: "\(max(1, exercise.repWindowMin))")
     }
 
     private var targetSet2Load: Double {
-        DPOEngine.roundToStep(set1Load * 0.80, step: exercise.microIncrement)
+        if exercise.isAssisted {
+            let maxW = exercise.effectiveMaxWeight
+            let candidate = DPOEngine.roundToStep(set1Load * 1.20, step: exercise.microIncrement)
+            return min(maxW, max(set1Load + exercise.microIncrement, candidate))
+        } else {
+            let minW = exercise.effectiveMinWeight
+            let maxW = exercise.effectiveMaxWeight
+            let candidate = DPOEngine.roundToStep(set1Load * 0.80, step: exercise.microIncrement)
+            return min(maxW, max(minW, candidate))
+        }
     }
 
     public var body: some View {
@@ -56,8 +74,9 @@ public struct CalibrationRunnerView: View {
                 }
                 .padding(16)
             }
+            .scrollDismissesKeyboard(.interactively)
             .background(Theme.background.ignoresSafeArea())
-            .navigationTitle("2-Set Calibration")
+            .navigationTitle(exercise.isAssisted ? "Counterweight Calibration" : "2-Set Calibration")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -66,6 +85,14 @@ public struct CalibrationRunnerView: View {
                         dismiss()
                     }
                     .foregroundColor(Theme.textSecondary)
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        hideKeyboard()
+                    }
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(Theme.emerald)
                 }
             }
             .onReceive(timer) { _ in
@@ -90,9 +117,20 @@ public struct CalibrationRunnerView: View {
     private var headerCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(exercise.name.uppercased())
-                    .font(.system(size: 16, weight: .black))
-                    .foregroundColor(Theme.emerald)
+                HStack(spacing: 6) {
+                    Text(exercise.name.uppercased())
+                        .font(.system(size: 16, weight: .black))
+                        .foregroundColor(Theme.emerald)
+                    if exercise.isAssisted {
+                        Text("ASSIST")
+                            .font(.system(size: 9, weight: .black))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(Theme.purple)
+                            .cornerRadius(4)
+                    }
+                }
                 Spacer()
                 Text(exercise.split)
                     .font(.system(size: 11, weight: .bold))
@@ -103,7 +141,9 @@ public struct CalibrationRunnerView: View {
                     .foregroundColor(Theme.textSecondary)
             }
 
-            Text("SPEC-001 Protocol: Muscular failure (0 RIR) across 2 sets with mandatory 180s rest and 20% load drop. Objectively derives e1RM and Fatigue Index.")
+            Text(exercise.isAssisted
+                ? "SPEC-001 §11 Protocol: Assisted counterweight machine. Muscular failure across 2 sets with 180s rest and +20% assistance pin increment. Objectively derives baseline counterweight capacity and Fatigue Index."
+                : "SPEC-001 Protocol: Muscular failure (0 RIR) across 2 sets with mandatory 180s rest and 20% load drop. Objectively derives e1RM and Fatigue Index.")
                 .font(.system(size: 12))
                 .foregroundColor(Theme.textSecondary)
                 .lineSpacing(2)
@@ -121,7 +161,7 @@ public struct CalibrationRunnerView: View {
         HStack(spacing: 8) {
             stepIndicator(title: "1. Anchor Set", index: 1)
             stepIndicator(title: "2. 180s Rest", index: 2)
-            stepIndicator(title: "3. 80% Drop", index: 3)
+            stepIndicator(title: exercise.isAssisted ? "3. +20% Assist" : "3. 80% Drop", index: 3)
             stepIndicator(title: "4. Verdict", index: 4)
         }
     }
@@ -159,37 +199,79 @@ public struct CalibrationRunnerView: View {
             VStack(spacing: 12) {
                 // Load Stepper
                 HStack {
-                    Text("Load (\(exercise.unit.uppercased()))")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Theme.textSecondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(exercise.isAssisted ? "Assistance Pin (\(exercise.unit.uppercased()))" : "Load (\(exercise.unit.uppercased()))")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(Theme.textSecondary)
+                        if exercise.isAssisted {
+                            Text("Stack Limit: \(String(format: "%.1f", exercise.effectiveMaxWeight)) \(exercise.unit)")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(Theme.purple)
+                        } else if exercise.minWeight != nil || exercise.maxWeight != nil {
+                            let minStr = exercise.minWeight != nil ? "Min: \(String(format: "%.1f", exercise.effectiveMinWeight))" : ""
+                            let maxStr = exercise.maxWeight != nil ? "Max: \(String(format: "%.1f", exercise.effectiveMaxWeight))" : ""
+                            let sep = (!minStr.isEmpty && !maxStr.isEmpty) ? " • " : ""
+                            Text("\(minStr)\(sep)\(maxStr) \(exercise.unit)")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(Theme.sky)
+                        }
+                    }
                     Spacer()
                     Button(action: {
-                        if set1Load > exercise.microIncrement {
-                            set1Load -= exercise.microIncrement
+                        let floor = exercise.effectiveMinWeight
+                        if set1Load > floor + 0.01 {
+                            set1Load = max(floor, set1Load - exercise.microIncrement)
+                            set1LoadString = String(format: "%.1f", set1Load)
                             Theme.hapticImpact(.light)
                         }
                     }) {
                         Image(systemName: "minus.circle.fill")
-                            .font(.system(size: 24))
+                            .font(.system(size: 26))
                             .foregroundColor(Theme.textMuted)
+                            .frame(width: 36, height: 36)
+                            .contentShape(Rectangle())
                     }
-                    Text(String(format: "%.1f", set1Load))
-                        .font(.system(size: 22, weight: .black, design: .rounded))
+                    .buttonStyle(.borderless)
+
+                    TextField(String(format: "%.1f", set1Load), text: $set1LoadString)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.center)
+                        .font(.system(size: 20, weight: .black, design: .rounded))
                         .foregroundColor(Theme.textPrimary)
                         .frame(minWidth: 70)
+                        .padding(.vertical, 4)
+                        .background(Theme.surfaceCard)
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1))
+                        .onChange(of: set1LoadString) { val in
+                            if let num = Double(val.filter { $0.isNumber || $0 == "." }) {
+                                set1Load = max(exercise.effectiveMinWeight, min(exercise.effectiveMaxWeight, num))
+                            }
+                        }
+                        .onSubmit {
+                            hideKeyboard()
+                        }
+
                     Button(action: {
-                        set1Load += exercise.microIncrement
-                        Theme.hapticImpact(.light)
+                        let ceiling = exercise.effectiveMaxWeight
+                        if set1Load + exercise.microIncrement <= ceiling + 0.01 {
+                            set1Load = min(ceiling, set1Load + exercise.microIncrement)
+                            set1LoadString = String(format: "%.1f", set1Load)
+                            Theme.hapticImpact(.light)
+                        }
                     }) {
                         Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 24))
+                            .font(.system(size: 26))
                             .foregroundColor(Theme.emerald)
+                            .frame(width: 36, height: 36)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(.borderless)
                 }
 
                 Divider().background(Theme.border)
 
-                // Reps Stepper
+                // Reps Stepper & Keypad
                 HStack {
                     Text("Completed Reps")
                         .font(.system(size: 13, weight: .semibold))
@@ -198,25 +280,49 @@ public struct CalibrationRunnerView: View {
                     Button(action: {
                         if set1Reps > 1 {
                             set1Reps -= 1
+                            set1RepsString = "\(set1Reps)"
                             Theme.hapticImpact(.light)
                         }
                     }) {
                         Image(systemName: "minus.circle.fill")
-                            .font(.system(size: 24))
+                            .font(.system(size: 26))
                             .foregroundColor(Theme.textMuted)
+                            .frame(width: 36, height: 36)
+                            .contentShape(Rectangle())
                     }
-                    Text("\(set1Reps)")
-                        .font(.system(size: 22, weight: .black, design: .rounded))
+                    .buttonStyle(.borderless)
+
+                    TextField("\(set1Reps)", text: $set1RepsString)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.center)
+                        .font(.system(size: 20, weight: .black, design: .rounded))
                         .foregroundColor(Theme.textPrimary)
                         .frame(minWidth: 50)
+                        .padding(.vertical, 4)
+                        .background(Theme.surfaceCard)
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1))
+                        .onChange(of: set1RepsString) { val in
+                            if let num = Int(val.filter { $0.isNumber }) {
+                                set1Reps = max(1, num)
+                            }
+                        }
+                        .onSubmit {
+                            hideKeyboard()
+                        }
+
                     Button(action: {
                         set1Reps += 1
+                        set1RepsString = "\(set1Reps)"
                         Theme.hapticImpact(.light)
                     }) {
                         Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 24))
+                            .font(.system(size: 26))
                             .foregroundColor(Theme.emerald)
+                            .frame(width: 36, height: 36)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(.borderless)
                 }
             }
             .padding(16)
@@ -286,7 +392,9 @@ public struct CalibrationRunnerView: View {
                 Text("Next Set Preparation:")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(Theme.textSecondary)
-                Text("Set 2 Load: \(String(format: "%.1f", targetSet2Load)) \(exercise.unit.uppercased()) (-20% Drop)")
+                Text(exercise.isAssisted
+                    ? "Set 2 Assistance: \(String(format: "%.1f", targetSet2Load)) \(exercise.unit.uppercased()) (+20% Assistance)"
+                    : "Set 2 Load: \(String(format: "%.1f", targetSet2Load)) \(exercise.unit.uppercased()) (\(targetSet2Load <= exercise.effectiveMinWeight && exercise.effectiveMinWeight > 0 ? "Stack Min Floor" : "-20% Drop"))")
                     .font(.system(size: 14, weight: .heavy))
                     .foregroundColor(Theme.emerald)
             }
@@ -326,7 +434,7 @@ public struct CalibrationRunnerView: View {
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.border, lineWidth: 1))
     }
 
-    // MARK: - Step 3: Set 2 (80% Load)
+    // MARK: - Step 3: Set 2 (Fatigue-Index Probe)
     private var set2InputCard: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack {
@@ -334,7 +442,7 @@ public struct CalibrationRunnerView: View {
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(Theme.amber)
                 Spacer()
-                Text("80% LOAD DROP")
+                Text(exercise.isAssisted ? "+20% ASSIST PIN" : (targetSet2Load <= exercise.effectiveMinWeight && exercise.effectiveMinWeight > 0 ? "STACK MIN FLOOR" : "80% LOAD DROP"))
                     .font(.system(size: 10, weight: .black))
                     .foregroundColor(Theme.sky)
                     .padding(.horizontal, 6)
@@ -345,11 +453,11 @@ public struct CalibrationRunnerView: View {
 
             VStack(spacing: 12) {
                 HStack {
-                    Text("Calculated Load (80%)")
+                    Text(exercise.isAssisted ? "Calculated Assistance (+20%)" : "Calculated Load (80%)")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(Theme.textSecondary)
                     Spacer()
-                    Text("\(String(format: "%.1f", targetSet2Load)) \(exercise.unit.uppercased())")
+                    Text("\(String(format: "%.1f", targetSet2Load)) \(exercise.unit.uppercased())\(exercise.isAssisted ? " Assist" : "")")
                         .font(.system(size: 20, weight: .black, design: .rounded))
                         .foregroundColor(Theme.emerald)
                 }
@@ -364,25 +472,49 @@ public struct CalibrationRunnerView: View {
                     Button(action: {
                         if set2Reps > 1 {
                             set2Reps -= 1
+                            set2RepsString = "\(set2Reps)"
                             Theme.hapticImpact(.light)
                         }
                     }) {
                         Image(systemName: "minus.circle.fill")
-                            .font(.system(size: 24))
+                            .font(.system(size: 26))
                             .foregroundColor(Theme.textMuted)
+                            .frame(width: 36, height: 36)
+                            .contentShape(Rectangle())
                     }
-                    Text("\(set2Reps)")
-                        .font(.system(size: 22, weight: .black, design: .rounded))
+                    .buttonStyle(.borderless)
+
+                    TextField("\(set2Reps)", text: $set2RepsString)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.center)
+                        .font(.system(size: 20, weight: .black, design: .rounded))
                         .foregroundColor(Theme.textPrimary)
                         .frame(minWidth: 50)
+                        .padding(.vertical, 4)
+                        .background(Theme.surfaceCard)
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1))
+                        .onChange(of: set2RepsString) { val in
+                            if let num = Int(val.filter { $0.isNumber }) {
+                                set2Reps = max(1, num)
+                            }
+                        }
+                        .onSubmit {
+                            hideKeyboard()
+                        }
+
                     Button(action: {
                         set2Reps += 1
+                        set2RepsString = "\(set2Reps)"
                         Theme.hapticImpact(.light)
                     }) {
                         Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 24))
+                            .font(.system(size: 26))
                             .foregroundColor(Theme.emerald)
+                            .frame(width: 36, height: 36)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(.borderless)
                 }
             }
             .padding(16)
@@ -420,18 +552,30 @@ public struct CalibrationRunnerView: View {
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: 44))
                     .foregroundColor(Theme.emerald)
-                Text("CALIBRATION DERIVED")
+                Text(exercise.isAssisted ? "COUNTERWEIGHT DERIVED" : "CALIBRATION DERIVED")
                     .font(.system(size: 16, weight: .black))
                     .foregroundColor(Theme.textPrimary)
                     .tracking(1)
             }
 
             VStack(spacing: 12) {
-                metricRow(title: "Calculated e1RM", value: String(format: "%.1f %@", computedE1RM, exercise.unit.uppercased()), highlight: Theme.purple)
+                metricRow(title: "Calculated e1RM Capacity", value: String(format: "%.1f %@", computedE1RM, exercise.unit.uppercased()), highlight: Theme.purple)
                 metricRow(title: "Fatigue Index (FI)", value: String(format: "%.3f", computedFI), highlight: Theme.sky)
-                metricRow(title: "W1 Anchor (Set 1)", value: String(format: "%.1f %@", computedLoads[0], exercise.unit.uppercased()), highlight: Theme.emerald)
-                metricRow(title: "W2 Intermediate (Set 2)", value: String(format: "%.1f %@", computedLoads[1], exercise.unit.uppercased()), highlight: Theme.cyan)
-                metricRow(title: "W3 Base Overload (Set 3)", value: String(format: "%.1f %@", computedLoads[2], exercise.unit.uppercased()), highlight: Theme.amber)
+                metricRow(
+                    title: exercise.isAssisted ? "A1 Anchor Pin (Set 1 - Hardest)" : "W1 Anchor (Set 1)",
+                    value: String(format: "%.1f %@%@", computedLoads[0], exercise.unit.uppercased(), exercise.isAssisted ? " Assist" : ""),
+                    highlight: Theme.emerald
+                )
+                metricRow(
+                    title: exercise.isAssisted ? "A2 Intermediate Pin (Set 2)" : "W2 Intermediate (Set 2)",
+                    value: String(format: "%.1f %@%@", computedLoads[1], exercise.unit.uppercased(), exercise.isAssisted ? " Assist" : ""),
+                    highlight: Theme.cyan
+                )
+                metricRow(
+                    title: exercise.isAssisted ? "A3 Base Hypertrophy Pin (Set 3)" : "W3 Base Overload (Set 3)",
+                    value: String(format: "%.1f %@%@", computedLoads[2], exercise.unit.uppercased(), exercise.isAssisted ? " Assist" : ""),
+                    highlight: Theme.amber
+                )
             }
             .padding(16)
             .background(Theme.surfaceElevated)
@@ -442,7 +586,11 @@ public struct CalibrationRunnerView: View {
                     exerciseId: exercise.id,
                     e1RM: computedE1RM,
                     fatigueIndex: computedFI,
-                    loads: computedLoads
+                    loads: computedLoads,
+                    set1Load: set1Load,
+                    set1Reps: set1Reps,
+                    set2Load: targetSet2Load,
+                    set2Reps: set2Reps
                 )
                 dismiss()
             }) {
@@ -475,23 +623,20 @@ public struct CalibrationRunnerView: View {
 
     // MARK: - Logic
     private func solveCalibrationVerdict() {
-        let e1RM = set1Load * (1.0 + (Double(set1Reps) / 30.0))
-        let w2Load = targetSet2Load
-        let r2Expected = 30.0 * ((e1RM / w2Load) - 1.0)
-        let rawFI = (r2Expected > 0) ? (1.0 - (Double(set2Reps) / r2Expected)) : 0.0
-        let fi = max(0.0, min(1.0, rawFI))
-
-        let w1 = set1Load
-        let w2Ratio = max(0.80, 1.0 - (fi * 0.5))
-        let w3Ratio = max(0.60, 1.0 - (fi * 1.0))
-
-        let stepVal = exercise.microIncrement
-        let w2 = DPOEngine.roundToStep(w1 * w2Ratio, step: stepVal)
-        let w3 = DPOEngine.roundToStep(w1 * w3Ratio, step: stepVal)
-
-        computedE1RM = (e1RM * 100).rounded() / 100
-        computedFI = (fi * 1000).rounded() / 1000
-        computedLoads = [w1, w2, w3]
+        let result = DPOEngine.executeCalibration(
+            set1Load: set1Load,
+            set1Reps: set1Reps,
+            set2Load: targetSet2Load,
+            set2Reps: set2Reps,
+            microIncrement: exercise.microIncrement,
+            isAssisted: exercise.isAssisted,
+            minWeight: exercise.minWeight,
+            maxWeight: exercise.maxWeight,
+            unit: exercise.unit
+        )
+        computedE1RM = result.e1RM
+        computedFI = result.fatigueIndex
+        computedLoads = result.loads
     }
 
     private func formatTime(_ sec: Int) -> String {

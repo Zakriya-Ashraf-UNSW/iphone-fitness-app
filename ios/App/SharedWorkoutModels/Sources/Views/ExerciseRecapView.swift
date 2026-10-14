@@ -80,18 +80,43 @@ public struct ExerciseRecapView: View {
                 }
             }
 
-            // Continue CTA
-            Button(action: { manager.advanceToNextExerciseAfterRecap() }) {
-                HStack {
-                    Spacer()
-                    Text("Continue to Next Lift →")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.black)
-                    Spacer()
+            // Continue or End Workout CTA
+            if manager.isLastExerciseInCurrentRoutine {
+                Button(action: { manager.finishWorkoutAndShowSummary() }) {
+                    HStack(spacing: 8) {
+                        Spacer()
+                        Image(systemName: "flag.checkered")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.black)
+                        Text("Finish Workout & View Summary 🎉")
+                            .font(.system(size: 16, weight: .heavy))
+                            .foregroundColor(.black)
+                        Spacer()
+                    }
+                    .padding(.vertical, 16)
+                    .background(
+                        LinearGradient(
+                            colors: [Theme.emerald, Color(red: 52/255, green: 211/255, blue: 153/255)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(12)
+                    .shadow(color: Theme.emerald.opacity(0.3), radius: 8, y: 3)
                 }
-                .padding(.vertical, 16)
-                .background(Theme.emerald)
-                .cornerRadius(12)
+            } else {
+                Button(action: { manager.advanceToNextExerciseAfterRecap() }) {
+                    HStack {
+                        Spacer()
+                        Text("Continue to Next Lift →")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.black)
+                        Spacer()
+                    }
+                    .padding(.vertical, 16)
+                    .background(Theme.emerald)
+                    .cornerRadius(12)
+                }
             }
         }
         .padding(20)

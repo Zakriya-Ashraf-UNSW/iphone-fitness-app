@@ -203,6 +203,38 @@
     "baseTareWeight": 2.5
   },
   {
+    "id": "push_assisted_tricep_dip",
+    "name": "Machine Assisted Tricep Dip",
+    "split": "PUSH",
+    "category": "MACHINE_COMPOUND",
+    "equipmentType": "BODYWEIGHT_LOADED",
+    "isAssisted": true,
+    "minWeight": 5,
+    "maxWeight": 120,
+    "unit": "lbs",
+    "microIncrement": 5,
+    "increment": 5,
+    "repWindowMin": 6,
+    "repWindowMax": 10,
+    "targetSets": 3,
+    "activeSetsCount": 3,
+    "isCalibrated": true,
+    "e1RM": 45,
+    "fatigueIndex": 0.18,
+    "loads": [
+      40,
+      50,
+      60
+    ],
+    "weight": 40,
+    "consecutiveSet3Failures": 0,
+    "consecutiveStagnations": 0,
+    "consecutivePromotions": 0,
+    "sessionsSinceRecalibration": 1,
+    "muscleGroup": "CHEST",
+    "baseTareWeight": 0
+  },
+  {
     "id": "pull_assisted_pullup",
     "name": "Machine Assisted Pull-Up",
     "split": "PULL",

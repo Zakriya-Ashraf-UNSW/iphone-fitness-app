@@ -1,0 +1,488 @@
+[
+  {
+    "id": "push_smith_incline_press",
+    "exercise_name": "Smith Machine Incline Bench Press",
+    "split": "PUSH",
+    "category": "MACHINE_COMPOUND",
+    "equipment_type": "MACHINE_LEVER",
+    "muscle_group": "CHEST",
+    "unit": "kg",
+    "micro_increment": 2.5,
+    "rep_range": {
+      "min": 6,
+      "max": 10,
+      "display": "6–10 reps"
+    },
+    "total_sets": 3,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 10,
+        "load": 20.0,
+        "unit": "kg",
+        "rest_time_seconds": 90,
+        "rest_time_display": "1m 30s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 8,
+        "load": 17.5,
+        "unit": "kg",
+        "rest_time_seconds": 90,
+        "rest_time_display": "1m 30s"
+      },
+      {
+        "set_number": 3,
+        "set_type": "Base Overload Set",
+        "target_reps": 10,
+        "load": 12.5,
+        "unit": "kg",
+        "rest_time_seconds": 90,
+        "rest_time_display": "1m 30s"
+      }
+    ]
+  },
+  {
+    "id": "push_barbell_overhead_press",
+    "exercise_name": "Barbell Overhead Press",
+    "split": "PUSH",
+    "category": "HEAVY_COMPOUND",
+    "equipment_type": "BARBELL",
+    "muscle_group": "SHOULDERS",
+    "unit": "kg",
+    "micro_increment": 2.5,
+    "rep_range": {
+      "min": 6,
+      "max": 8,
+      "display": "6–8 reps"
+    },
+    "total_sets": 3,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 8,
+        "load": 60.0,
+        "unit": "kg",
+        "rest_time_seconds": 150,
+        "rest_time_display": "2m 30s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 7,
+        "load": 50.0,
+        "unit": "kg",
+        "rest_time_seconds": 150,
+        "rest_time_display": "2m 30s"
+      },
+      {
+        "set_number": 3,
+        "set_type": "Base Overload Set",
+        "target_reps": 8,
+        "load": 40.0,
+        "unit": "kg",
+        "rest_time_seconds": 135,
+        "rest_time_display": "2m 15s"
+      }
+    ]
+  },
+  {
+    "id": "push_machine_shoulder_press",
+    "exercise_name": "Machine Shoulder Press",
+    "split": "PUSH",
+    "category": "MACHINE_COMPOUND",
+    "equipment_type": "MACHINE_LEVER",
+    "muscle_group": "SHOULDERS",
+    "unit": "lbs",
+    "micro_increment": 5.0,
+    "rep_range": {
+      "min": 8,
+      "max": 12,
+      "display": "8–12 reps"
+    },
+    "total_sets": 3,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 12,
+        "load": 60.0,
+        "unit": "lbs",
+        "rest_time_seconds": 90,
+        "rest_time_display": "1m 30s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 10,
+        "load": 50.0,
+        "unit": "lbs",
+        "rest_time_seconds": 90,
+        "rest_time_display": "1m 30s"
+      },
+      {
+        "set_number": 3,
+        "set_type": "Base Overload Set",
+        "target_reps": 12,
+        "load": 40.0,
+        "unit": "lbs",
+        "rest_time_seconds": 90,
+        "rest_time_display": "1m 30s"
+      }
+    ]
+  },
+  {
+    "id": "push_cable_fly_high",
+    "exercise_name": "Cable High Fly",
+    "split": "PUSH",
+    "category": "ISOLATION",
+    "equipment_type": "CABLE_STACK",
+    "muscle_group": "CHEST",
+    "unit": "lbs",
+    "micro_increment": 2.5,
+    "rep_range": {
+      "min": 10,
+      "max": 15,
+      "display": "10–15 reps"
+    },
+    "total_sets": 3,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 15,
+        "load": 35.0,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 12,
+        "load": 30.0,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      },
+      {
+        "set_number": 3,
+        "set_type": "Base Overload Set",
+        "target_reps": 14,
+        "load": 22.5,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      }
+    ]
+  },
+  {
+    "id": "push_cable_lateral_raise",
+    "exercise_name": "Cable Single-Arm Lateral Raise",
+    "split": "PUSH",
+    "category": "ISOLATION",
+    "equipment_type": "CABLE_STACK",
+    "muscle_group": "SHOULDERS",
+    "unit": "lbs",
+    "micro_increment": 2.5,
+    "rep_range": {
+      "min": 10,
+      "max": 15,
+      "display": "10–15 reps"
+    },
+    "total_sets": 2,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 15,
+        "load": 17.5,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 12,
+        "load": 15.0,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      }
+    ]
+  },
+  {
+    "id": "pull_barbell_bent_over_row",
+    "exercise_name": "Barbell Bent-Over Row",
+    "split": "PULL",
+    "category": "HEAVY_COMPOUND",
+    "equipment_type": "BARBELL",
+    "muscle_group": "BACK",
+    "unit": "kg",
+    "micro_increment": 2.5,
+    "rep_range": {
+      "min": 6,
+      "max": 10,
+      "display": "6–10 reps"
+    },
+    "total_sets": 3,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 10,
+        "load": 80.0,
+        "unit": "kg",
+        "rest_time_seconds": 150,
+        "rest_time_display": "2m 30s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 8,
+        "load": 67.5,
+        "unit": "kg",
+        "rest_time_seconds": 150,
+        "rest_time_display": "2m 30s"
+      },
+      {
+        "set_number": 3,
+        "set_type": "Base Overload Set",
+        "target_reps": 10,
+        "load": 52.5,
+        "unit": "kg",
+        "rest_time_seconds": 135,
+        "rest_time_display": "2m 15s"
+      }
+    ]
+  },
+  {
+    "id": "pull_lat_pulldown_neutral",
+    "exercise_name": "Neutral Grip Lat Pulldown",
+    "split": "PULL",
+    "category": "MACHINE_COMPOUND",
+    "equipment_type": "CABLE_STACK",
+    "muscle_group": "LATS",
+    "unit": "lbs",
+    "micro_increment": 5.0,
+    "rep_range": {
+      "min": 8,
+      "max": 12,
+      "display": "8–12 reps"
+    },
+    "total_sets": 3,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 12,
+        "load": 140.0,
+        "unit": "lbs",
+        "rest_time_seconds": 90,
+        "rest_time_display": "1m 30s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 10,
+        "load": 120.0,
+        "unit": "lbs",
+        "rest_time_seconds": 90,
+        "rest_time_display": "1m 30s"
+      },
+      {
+        "set_number": 3,
+        "set_type": "Base Overload Set",
+        "target_reps": 12,
+        "load": 90.0,
+        "unit": "lbs",
+        "rest_time_seconds": 90,
+        "rest_time_display": "1m 30s"
+      }
+    ]
+  },
+  {
+    "id": "pull_incline_dumbbell_curl",
+    "exercise_name": "Incline Dumbbell Biceps Curl",
+    "split": "PULL",
+    "category": "ISOLATION",
+    "equipment_type": "DUMBBELL",
+    "muscle_group": "BICEPS",
+    "unit": "lbs",
+    "micro_increment": 2.5,
+    "rep_range": {
+      "min": 8,
+      "max": 12,
+      "display": "8–12 reps"
+    },
+    "total_sets": 3,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 12,
+        "load": 30.0,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 10,
+        "load": 25.0,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      },
+      {
+        "set_number": 3,
+        "set_type": "Base Overload Set",
+        "target_reps": 11,
+        "load": 20.0,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      }
+    ]
+  },
+  {
+    "id": "legs_barbell_back_squat",
+    "exercise_name": "Barbell Back Squat",
+    "split": "LEGS",
+    "category": "HEAVY_COMPOUND",
+    "equipment_type": "BARBELL",
+    "muscle_group": "QUADS",
+    "unit": "kg",
+    "micro_increment": 2.5,
+    "rep_range": {
+      "min": 6,
+      "max": 8,
+      "display": "6–8 reps"
+    },
+    "total_sets": 3,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 8,
+        "load": 120.0,
+        "unit": "kg",
+        "rest_time_seconds": 180,
+        "rest_time_display": "3m 00s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 7,
+        "load": 100.0,
+        "unit": "kg",
+        "rest_time_seconds": 180,
+        "rest_time_display": "3m 00s"
+      },
+      {
+        "set_number": 3,
+        "set_type": "Base Overload Set",
+        "target_reps": 8,
+        "load": 75.0,
+        "unit": "kg",
+        "rest_time_seconds": 150,
+        "rest_time_display": "2m 30s"
+      }
+    ]
+  },
+  {
+    "id": "legs_leg_press",
+    "exercise_name": "Plate-Loaded Leg Press",
+    "split": "LEGS",
+    "category": "MACHINE_COMPOUND",
+    "equipment_type": "MACHINE_LEVER",
+    "muscle_group": "QUADS",
+    "unit": "kg",
+    "micro_increment": 5.0,
+    "rep_range": {
+      "min": 8,
+      "max": 12,
+      "display": "8–12 reps"
+    },
+    "total_sets": 3,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 12,
+        "load": 180.0,
+        "unit": "kg",
+        "rest_time_seconds": 120,
+        "rest_time_display": "2m 00s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 10,
+        "load": 150.0,
+        "unit": "kg",
+        "rest_time_seconds": 120,
+        "rest_time_display": "2m 00s"
+      },
+      {
+        "set_number": 3,
+        "set_type": "Base Overload Set",
+        "target_reps": 12,
+        "load": 110.0,
+        "unit": "kg",
+        "rest_time_seconds": 105,
+        "rest_time_display": "1m 45s"
+      }
+    ]
+  },
+  {
+    "id": "legs_lying_leg_curl",
+    "exercise_name": "Lying Hamstring Leg Curl",
+    "split": "LEGS",
+    "category": "ISOLATION",
+    "equipment_type": "MACHINE_LEVER",
+    "muscle_group": "HAMSTRINGS",
+    "unit": "lbs",
+    "micro_increment": 5.0,
+    "rep_range": {
+      "min": 10,
+      "max": 15,
+      "display": "10–15 reps"
+    },
+    "total_sets": 3,
+    "sets": [
+      {
+        "set_number": 1,
+        "set_type": "Anchor Set",
+        "target_reps": 15,
+        "load": 85.0,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      },
+      {
+        "set_number": 2,
+        "set_type": "Intermediate Set",
+        "target_reps": 12,
+        "load": 70.0,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      },
+      {
+        "set_number": 3,
+        "set_type": "Base Overload Set",
+        "target_reps": 13,
+        "load": 55.0,
+        "unit": "lbs",
+        "rest_time_seconds": 60,
+        "rest_time_display": "1m 00s"
+      }
+    ]
+  }
+]

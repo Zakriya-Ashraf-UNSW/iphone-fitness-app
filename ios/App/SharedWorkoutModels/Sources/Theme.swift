@@ -68,3 +68,15 @@ public enum Theme {
     public static func hapticWarning() {}
     #endif
 }
+
+#if canImport(UIKit)
+public extension View {
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+#else
+public extension View {
+    func hideKeyboard() {}
+}
+#endif

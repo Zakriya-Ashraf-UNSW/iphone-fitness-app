@@ -5,209 +5,7 @@ import AppIntents
 import SharedWorkoutModels
 import os
 
-private let logger = Logger(subsystem: "com.overload.fitnessapp.WorkoutWidgets", category: "Intents")
-
-private let appGroupID = "group.com.overload.fitnessapp"
-
-/// Writes an action to the shared App Group UserDefaults and posts a Darwin
-/// notification so the main app can react even while backgrounded.
-private func notifyAppOfAction(_ action: String, params: [String: String] = [:]) {
-    guard let defaults = UserDefaults(suiteName: appGroupID) else {
-        logger.error("Failed to access App Group UserDefaults")
-        return
-    }
-    var payload = params
-    payload["action"] = action
-    payload["timestamp"] = String(Date().timeIntervalSince1970)
-
-    // Maintain FIFO queue of pending actions so multiple actions while backgrounded are preserved
-    var queue = defaults.array(forKey: "pendingWidgetActionsQueue") as? [[String: String]] ?? []
-    queue.append(payload)
-    defaults.set(queue, forKey: "pendingWidgetActionsQueue")
-
-    // Keep single key for backwards compatibility
-    defaults.set(payload, forKey: "pendingWidgetAction")
-    defaults.synchronize()
-    logger.info("Wrote pendingWidgetAction: \(action) (queue length: \(queue.count))")
-
-    // Post a Darwin notification so the app can wake up and read the action
-    let notificationName = CFNotificationName("com.overload.fitnessapp.widgetAction" as CFString)
-    CFNotificationCenterPostNotification(
-        CFNotificationCenterGetDarwinNotifyCenter(),
-        notificationName,
-        nil, nil, true
-    )
-}
-
-// MARK: - App Intents for Dynamic Island Interactive Buttons
-struct SkipRestIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Skip Rest"
-    static var description: IntentDescription = "Immediately completes rest countdown"
-    static var openAppWhenRun: Bool = false
-
-    func perform() async throws -> some IntentResult {
-        logger.info("SkipRestIntent triggered")
-        let activities = Activity<WorkoutActivityAttributes>.activities
-        logger.info("Found \(activities.count) activities")
-        for activity in activities {
-            logger.info("Updating activity: \(activity.id)")
-            var state = activity.content.state
-            state.isResting = false
-            state.restEndTimestamp = nil
-            state.isTriageLogging = true
-            let content = ActivityContent(state: state, staleDate: nil)
-            await activity.update(content)
-            logger.info("Activity updated successfully")
-        }
-        // Notify the main app so it can update its JS state
-        notifyAppOfAction("skip-rest")
-        return .result()
-    }
-}
-
-
-struct AdjustTimerIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Adjust Rest Timer"
-    static var openAppWhenRun: Bool = false
-    
-    @Parameter(title: "Delta Seconds")
-    var deltaSeconds: Int
-
-    init() {}
-    init(delta: Int) {
-        self.deltaSeconds = delta
-    }
-
-    func perform() async throws -> some IntentResult {
-        logger.info("AdjustTimerIntent called with adjustment: \(deltaSeconds)")
-        let activities = Activity<WorkoutActivityAttributes>.activities
-        logger.info("Found \(activities.count) activities")
-        let now = Date().timeIntervalSince1970
-        for activity in activities {
-            logger.info("Updating activity: \(activity.id)")
-            var state = activity.content.state
-            let currentEnd = state.restEndTimestamp ?? (now + 60)
-            let newEnd = max(now + 1, currentEnd + Double(deltaSeconds))
-            state.restEndTimestamp = newEnd
-            state.isResting = true
-            let content = ActivityContent(state: state, staleDate: nil)
-            await activity.update(content)
-            logger.info("Activity updated successfully, new end: \(newEnd)")
-        }
-        notifyAppOfAction("adjust-timer", params: ["delta": String(deltaSeconds)])
-        return .result()
-    }
-}
-
-
-struct LogTriageIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Log Set Outcome"
-    static var openAppWhenRun: Bool = false
-
-    @Parameter(title: "Outcome")
-    var outcome: String // "missed", "target", "overload"
-
-    init() {}
-    init(outcome: String) {
-        self.outcome = outcome
-    }
-
-    func perform() async throws -> some IntentResult {
-        logger.info("LogTriageIntent triggered with outcome: \(outcome)")
-        let activities = Activity<WorkoutActivityAttributes>.activities
-        logger.info("Found \(activities.count) activities")
-        for activity in activities {
-            logger.info("Updating activity: \(activity.id)")
-            var state = activity.content.state
-            state.isTriageLogging = false
-            if state.setIndex < state.totalSets {
-                state.setIndex += 1
-                state.isResting = true
-                state.restEndTimestamp = Date().addingTimeInterval(90).timeIntervalSince1970
-            } else {
-                state.isRecap = true
-                state.isResting = false
-                state.restEndTimestamp = nil
-            }
-            let content = ActivityContent(state: state, staleDate: nil)
-            await activity.update(content)
-            logger.info("Activity updated successfully")
-        }
-        notifyAppOfAction("log-triage", params: ["outcome": outcome])
-        return .result()
-    }
-}
-
-struct ContinueNextExerciseIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Continue to Next Lift"
-    static var description: IntentDescription = "Advances to the next exercise after viewing progression recap"
-    static var openAppWhenRun: Bool = false
-
-    func perform() async throws -> some IntentResult {
-        logger.info("ContinueNextExerciseIntent triggered")
-        let activities = Activity<WorkoutActivityAttributes>.activities
-        for activity in activities {
-            var state = activity.content.state
-            state.isRecap = false
-            state.isTransitionRest = false
-            state.setIndex = 1
-            state.isResting = false
-            state.restEndTimestamp = nil
-            state.isTriageLogging = false
-            if !state.nextExerciseName.isEmpty {
-                state.exerciseName = state.nextExerciseName
-                state.nextExerciseName = ""
-            }
-            let content = ActivityContent(state: state, staleDate: nil)
-            await activity.update(content)
-        }
-        notifyAppOfAction("continue-next-exercise")
-        return .result()
-    }
-}
-
-struct LogWarmupIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Complete Warm-Up"
-    static var description: IntentDescription = "Logs the current warm-up set and starts prescribed rest"
-    static var openAppWhenRun: Bool = false
-
-    func perform() async throws -> some IntentResult {
-        logger.info("LogWarmupIntent triggered")
-        let activities = Activity<WorkoutActivityAttributes>.activities
-        for activity in activities {
-            var state = activity.content.state
-            state.isResting = true
-            state.restEndTimestamp = Date().addingTimeInterval(60).timeIntervalSince1970
-            let content = ActivityContent(state: state, staleDate: nil)
-            await activity.update(content)
-        }
-        notifyAppOfAction("log-warmup")
-        return .result()
-    }
-}
-
-struct SkipWarmupsIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Skip Warm-Ups"
-    static var description: IntentDescription = "Skips warm-ups and begins Anchor Set 1"
-    static var openAppWhenRun: Bool = false
-
-    func perform() async throws -> some IntentResult {
-        logger.info("SkipWarmupsIntent triggered")
-        let activities = Activity<WorkoutActivityAttributes>.activities
-        for activity in activities {
-            var state = activity.content.state
-            state.isWarmup = false
-            state.setIndex = 1
-            state.isResting = false
-            state.restEndTimestamp = nil
-            state.isTriageLogging = false
-            let content = ActivityContent(state: state, staleDate: nil)
-            await activity.update(content)
-        }
-        notifyAppOfAction("skip-warmup")
-        return .result()
-    }
-}
+private let logger = Logger(subsystem: "com.overload.fitnessapp.WorkoutWidgets", category: "Widgets")
 
 // MARK: - Main Dynamic Island Widget for iPhone 16 Pro Max
 public struct WorkoutLiveActivityWidget: Widget {
@@ -251,10 +49,18 @@ public struct WorkoutLiveActivityWidget: Widget {
                             Text("Lift Recap")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
+                        } else if context.state.isTriageLogging {
+                            Text("Log Set \(context.state.setIndex)")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(Color.orange)
+                        } else if context.state.isResting {
+                            Text("Rest \(context.state.setIndex)/\(context.state.totalSets)")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(Color.orange)
                         } else {
                             Text("Set \(context.state.setIndex) of \(context.state.totalSets)")
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(Color(white: 0.65))
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
                         }
                     }
                     .padding(.leading, 3)
@@ -301,7 +107,7 @@ public struct WorkoutLiveActivityWidget: Widget {
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.top, 1)
-                    } else if let restEnd = context.state.restEndTimestamp {
+                    } else if context.state.isResting, let restEnd = context.state.restEndTimestamp {
                         let targetDate = Date(timeIntervalSince1970: restEnd)
                         Text(timerInterval: Date()...max(Date(), targetDate), countsDown: true)
                             .font(.system(size: 16, weight: .black, design: .monospaced))
@@ -311,14 +117,22 @@ public struct WorkoutLiveActivityWidget: Widget {
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.top, 1)
-                    } else {
-                        Text("01:15")
-                            .font(.system(size: 16, weight: .black, design: .monospaced))
+                    } else if context.state.isTriageLogging {
+                        Text("SELECT")
+                            .font(.system(size: 11, weight: .heavy, design: .monospaced))
                             .foregroundColor(Color.orange)
-                            .shadow(color: Color.orange.opacity(0.45), radius: 3, x: 0, y: 0)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .padding(.top, 1)
+                    } else {
+                        Text(context.state.loadText)
+                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                            .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
                             .minimumScaleFactor(0.85)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                             .padding(.top, 1)
                     }
                 }
@@ -330,10 +144,12 @@ public struct WorkoutLiveActivityWidget: Widget {
                         WarmupExpandedView(state: context.state)
                     } else if context.state.isRecap {
                         ProgressionRecapExpandedView(state: context.state)
+                    } else if context.state.isResting {
+                        RestCountdownExpandedView(state: context.state)
                     } else if context.state.isTriageLogging {
                         TriageExpandedView(state: context.state)
                     } else {
-                        RestCountdownExpandedView(state: context.state)
+                        ActiveSetExpandedView(state: context.state)
                     }
                 }
             } compactLeading: {
@@ -342,10 +158,9 @@ public struct WorkoutLiveActivityWidget: Widget {
                         Image(systemName: "hourglass")
                             .foregroundColor(Color.orange)
                             .font(.system(size: 9.5, weight: .black))
-                        Text(context.state.nextExerciseName.isEmpty ? "Next Lift" : context.state.nextExerciseName)
-                            .font(.system(size: 10.5, weight: .bold))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
+                        Text("PREP")
+                            .font(.system(size: 10, weight: .heavy, design: .monospaced))
+                            .foregroundColor(Color.orange)
                     }
                     .padding(.leading, 3)
                 } else if context.state.isWarmup {
@@ -356,14 +171,6 @@ public struct WorkoutLiveActivityWidget: Widget {
                         Text("W\(context.state.warmupIndex)")
                             .font(.system(size: 10.5, weight: .black, design: .monospaced))
                             .foregroundColor(.white)
-                        Text("•")
-                            .font(.system(size: 8))
-                            .foregroundColor(Color(white: 0.45))
-                        Text(context.state.exerciseName)
-                            .font(.system(size: 10.5, weight: .heavy, design: .rounded))
-                            .foregroundColor(Color(white: 0.9))
-                            .lineLimit(1)
-                            .truncationMode(.tail)
                     }
                     .padding(.leading, 3)
                 } else if context.state.isRecap {
@@ -371,32 +178,39 @@ public struct WorkoutLiveActivityWidget: Widget {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
                             .font(.system(size: 10, weight: .black))
-                        Text(context.state.exerciseName)
-                            .font(.system(size: 10.5, weight: .bold))
+                        Text("DONE")
+                            .font(.system(size: 10, weight: .black, design: .rounded))
+                            .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
+                    }
+                    .padding(.leading, 3)
+                } else if context.state.isResting {
+                    HStack(spacing: 3) {
+                        Image(systemName: "timer")
+                            .foregroundColor(Color.orange)
+                            .font(.system(size: 10, weight: .bold))
+                        Text("S\(context.state.setIndex)")
+                            .font(.system(size: 11, weight: .heavy, design: .monospaced))
                             .foregroundColor(.white)
-                            .lineLimit(1)
+                    }
+                    .padding(.leading, 3)
+                } else if context.state.isTriageLogging {
+                    HStack(spacing: 3) {
+                        Image(systemName: "pencil.line")
+                            .foregroundColor(Color.orange)
+                            .font(.system(size: 9.5, weight: .bold))
+                        Text("S\(context.state.setIndex)")
+                            .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                            .foregroundColor(.white)
                     }
                     .padding(.leading, 3)
                 } else {
-                    // Compact Leading: Dumbbell icon + Set Badge + Exercise Name
-                    HStack(spacing: 4) {
+                    HStack(spacing: 3) {
                         Image(systemName: "dumbbell.fill")
-                            .foregroundColor(.white)
-                            .font(.system(size: 10, weight: .bold))
-
+                            .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
+                            .font(.system(size: 9.5, weight: .bold))
                         Text("S\(context.state.setIndex)")
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .font(.system(size: 11, weight: .heavy, design: .monospaced))
                             .foregroundColor(.white)
-
-                        Text("•")
-                            .font(.system(size: 8))
-                            .foregroundColor(Color(white: 0.45))
-
-                        Text(context.state.exerciseName)
-                            .font(.system(size: 11, weight: .heavy, design: .rounded))
-                            .foregroundColor(Color(white: 0.9))
-                            .lineLimit(1)
-                            .truncationMode(.tail)
                     }
                     .padding(.leading, 3)
                 }
@@ -404,17 +218,21 @@ public struct WorkoutLiveActivityWidget: Widget {
                 if context.state.isTransitionRest, let restEnd = context.state.restEndTimestamp {
                     let targetDate = Date(timeIntervalSince1970: restEnd)
                     Text(timerInterval: Date()...max(Date(), targetDate), countsDown: true)
-                        .font(.system(size: 11.5, weight: .black, design: .monospaced))
+                        .font(.system(size: 12, weight: .black, design: .monospaced))
                         .foregroundColor(Color.orange)
                         .shadow(color: Color.orange.opacity(0.4), radius: 2)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 44, alignment: .trailing)
                         .padding(.trailing, 3)
                 } else if context.state.isWarmup {
                     if context.state.isResting, let restEnd = context.state.restEndTimestamp {
                         let targetDate = Date(timeIntervalSince1970: restEnd)
                         Text(timerInterval: Date()...max(Date(), targetDate), countsDown: true)
-                            .font(.system(size: 11.5, weight: .black, design: .monospaced))
+                            .font(.system(size: 12, weight: .black, design: .monospaced))
                             .foregroundColor(Color.orange)
                             .shadow(color: Color.orange.opacity(0.4), radius: 2)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 44, alignment: .trailing)
                             .padding(.trailing, 3)
                     } else {
                         Text(context.state.loadText)
@@ -428,46 +246,28 @@ public struct WorkoutLiveActivityWidget: Widget {
                         .font(.system(size: 10.5, weight: .heavy, design: .rounded))
                         .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
                         .padding(.trailing, 3)
+                } else if context.state.isResting, let restEnd = context.state.restEndTimestamp {
+                    let targetDate = Date(timeIntervalSince1970: restEnd)
+                    Text(timerInterval: Date()...max(Date(), targetDate), countsDown: true)
+                        .font(.system(size: 12, weight: .black, design: .monospaced))
+                        .foregroundColor(Color.orange)
+                        .shadow(color: Color.orange.opacity(0.4), radius: 2)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 44, alignment: .trailing)
+                        .padding(.trailing, 3)
+                } else if context.state.isTriageLogging {
+                    Text("LOG")
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundColor(Color.orange)
+                        .padding(.trailing, 3)
                 } else {
-                    // Compact Trailing: Rep Range Pill + Load + Live countdown/Status
-                    HStack(spacing: 5) {
-                        // Mini Rep Range Pill
-                        HStack(spacing: 2) {
-                            Image(systemName: "repeat")
-                                .font(.system(size: 7, weight: .black))
-                            Text(compactRepRange(context.state.targetRepsText))
-                                .font(.system(size: 9.5, weight: .black, design: .monospaced))
-                        }
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
-                        .background(Color(white: 0.18))
-                        .overlay(
-                            Capsule().stroke(Color(white: 0.38), lineWidth: 0.8)
-                        )
-                        .clipShape(Capsule())
-                        .foregroundColor(.white)
-
-                        // Load Text
-                        Text(context.state.loadText)
-                            .font(.system(size: 10.5, weight: .bold, design: .monospaced))
-                            .foregroundColor(Color(white: 0.85))
-                            .lineLimit(1)
-
-                        // Countdown timer or Triage status
-                        if context.state.isResting, let restEnd = context.state.restEndTimestamp {
-                            let targetDate = Date(timeIntervalSince1970: restEnd)
-                            Text(timerInterval: Date()...max(Date(), targetDate), countsDown: true)
-                                .font(.system(size: 11.5, weight: .black, design: .monospaced))
-                                .foregroundColor(Color.orange)
-                                .shadow(color: Color.orange.opacity(0.4), radius: 2)
-                                .frame(minWidth: 36)
-                        } else if context.state.isTriageLogging {
-                            Text("LOG")
-                                .font(.system(size: 11, weight: .black, design: .monospaced))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .padding(.trailing, 3)
+                    Text(context.state.loadText)
+                        .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                        .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .multilineTextAlignment(.trailing)
+                        .padding(.trailing, 3)
                 }
             } minimal: {
                 if context.state.isTransitionRest {
@@ -524,6 +324,168 @@ private func compactRepRange(_ text: String) -> String {
     return cleaned.isEmpty ? text : cleaned
 }
 
+// MARK: - SCREEN-03.2: Active Working Set Expanded Dynamic Island View (Lifting In Progress)
+struct ActiveSetExpandedView: View {
+    let state: WorkoutActivityAttributes.ContentState
+
+    var body: some View {
+        VStack(spacing: 5) {
+            // TOP ROW: Exercise Title + High-visibility "LIFTING ⚡️" Pill
+            HStack(alignment: .center, spacing: 6) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(state.exerciseName)
+                        .font(.system(size: 13.5, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+
+                    Text("Working Set \(state.setIndex) of \(state.totalSets)")
+                        .font(.system(size: 9.5, weight: .semibold))
+                        .foregroundColor(Color(white: 0.65))
+                }
+
+                Spacer(minLength: 4)
+
+                // High-visibility Lifting Badge
+                HStack(spacing: 3) {
+                    Circle()
+                        .fill(Color(red: 0.25, green: 0.85, blue: 0.65))
+                        .frame(width: 6, height: 6)
+                    Text("LIFTING")
+                        .font(.system(size: 8.5, weight: .black, design: .monospaced))
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2.5)
+                .background(Color(red: 0.25, green: 0.85, blue: 0.65).opacity(0.18))
+                .overlay(
+                    Capsule().stroke(Color(red: 0.25, green: 0.85, blue: 0.65).opacity(0.6), lineWidth: 0.8)
+                )
+                .clipShape(Capsule())
+                .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
+            }
+            .padding(.horizontal, 6)
+
+            // MIDDLE ROW: Panoramic 3-pillar Telemetry Dashboard
+            HStack(spacing: 4) {
+                // Metric 1: Working Load
+                VStack(spacing: 1) {
+                    Text("LOAD")
+                        .font(.system(size: 7.5, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color(white: 0.5))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Text(state.loadText)
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 3.5)
+                .background(Color(white: 0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+                // Metric 2: Target Rep Window
+                VStack(spacing: 1) {
+                    Text("TARGET")
+                        .font(.system(size: 7.5, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color(white: 0.5))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Text(cleanRepRange(state.targetRepsText))
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 3.5)
+                .background(Color(white: 0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+                // Metric 3: Next Overload Target
+                VStack(spacing: 1) {
+                    Text("OVERLOAD")
+                        .font(.system(size: 7.5, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color(white: 0.5))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    Text(state.overloadIncrementText)
+                        .font(.system(size: 10, weight: .heavy, design: .rounded))
+                        .foregroundColor(Color.orange)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 3.5)
+                .background(Color(white: 0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            }
+            .padding(.horizontal, 6)
+
+            // BOTTOM ROW: 1-Tap Fast Completion Actions
+            HStack(spacing: 5) {
+                // Primary: 1-Tap Target Reps Log
+                Button(intent: LogTriageIntent(outcome: "target")) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 9.5))
+                        Text("Log \(compactRepRange(state.targetRepsText))r Target ✓")
+                            .font(.system(size: 10.5, weight: .black, design: .rounded))
+                    }
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity, minHeight: 28)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .buttonStyle(.plain)
+
+                // Secondary: Overload Button
+                Button(intent: LogTriageIntent(outcome: "overload")) {
+                    HStack(spacing: 3) {
+                        Text("🚀")
+                            .font(.system(size: 8.5))
+                        Text(state.overloadTargetText.isEmpty ? "Overload" : state.overloadTargetText)
+                            .font(.system(size: 9.5, weight: .bold, design: .rounded))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity * 0.75, minHeight: 28)
+                    .background(Color(white: 0.18))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .stroke(Color(white: 0.35), lineWidth: 0.8)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .buttonStyle(.plain)
+
+                // Triage / Options button
+                Button(intent: OpenTriageIntent()) {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(Color(white: 0.8))
+                        .frame(width: 28, height: 28)
+                        .background(Color(white: 0.12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(Color(white: 0.25), lineWidth: 0.8)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 6)
+        }
+    }
+}
+
 // MARK: - SCREEN-03.3: Rest Countdown HUD Expanded View (Wide Island Form)
 struct RestCountdownExpandedView: View {
     let state: WorkoutActivityAttributes.ContentState
@@ -532,11 +494,20 @@ struct RestCountdownExpandedView: View {
         VStack(spacing: 5) {
             // TOP ROW: Exercise Title + Rep Range Pill across wide island form
             HStack(alignment: .center, spacing: 6) {
-                Text(state.exerciseName)
-                    .font(.system(size: 13.5, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(state.exerciseName)
+                        .font(.system(size: 13.5, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+
+                    if !state.restTimerLabel.isEmpty {
+                        Text(state.restTimerLabel)
+                            .font(.system(size: 8.5, weight: .heavy, design: .monospaced))
+                            .foregroundColor(Color.orange)
+                            .lineLimit(1)
+                    }
+                }
 
                 Spacer(minLength: 4)
 
@@ -697,7 +668,7 @@ struct TriageExpandedView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
 
-                    Text("Set \(state.setIndex) of \(state.totalSets) Completed")
+                    Text("Working Set \(state.setIndex) of \(state.totalSets)")
                         .font(.system(size: 9.5, weight: .semibold))
                         .foregroundColor(Color(white: 0.6))
                 }
@@ -1495,18 +1466,17 @@ struct LockScreenLiveActivityView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                         Text("LOG S\(state.setIndex)")
                             .font(.system(size: 12, weight: .heavy, design: .monospaced))
-                            .foregroundColor(.white)
+                            .foregroundColor(Color.orange)
                             .frame(maxWidth: .infinity, alignment: .center)
                     } else {
-                        Text("OVERLOAD")
+                        Text("STATUS")
                             .font(.system(size: 8.5, weight: .bold, design: .monospaced))
                             .foregroundColor(Color(white: 0.5))
                             .frame(maxWidth: .infinity, alignment: .center)
-                        Text(state.overloadIncrementText)
-                            .font(.system(size: 12, weight: .heavy, design: .rounded))
-                            .foregroundColor(.white)
+                        Text("LIFTING ⚡️")
+                            .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                            .foregroundColor(Color(red: 0.25, green: 0.85, blue: 0.65))
                             .lineLimit(1)
-                            .minimumScaleFactor(0.8)
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }
@@ -1641,12 +1611,12 @@ struct LockScreenLiveActivityView: View {
                 }
             } else {
                 HStack(spacing: 8) {
-                    Button(intent: SkipRestIntent()) {
-                        HStack(spacing: 4) {
+                    Button(intent: LogTriageIntent(outcome: "target")) {
+                        HStack(spacing: 5) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 11))
-                            Text("Log Set \(state.setIndex) Outcome")
-                                .font(.system(size: 12, weight: .bold, design: .rounded))
+                            Text("Log Set \(state.setIndex) Complete ✓")
+                                .font(.system(size: 12.5, weight: .black, design: .rounded))
                         }
                         .foregroundColor(.black)
                         .frame(maxWidth: .infinity, minHeight: 36)
@@ -1655,18 +1625,37 @@ struct LockScreenLiveActivityView: View {
                     }
                     .buttonStyle(.plain)
 
-                    Link(destination: URL(string: "overload://enter-exact")!) {
+                    Button(intent: LogTriageIntent(outcome: "overload")) {
                         HStack(spacing: 4) {
-                            Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: 9))
-                            Text("Exact")
-                                .font(.system(size: 11, weight: .semibold))
+                            Text("🚀")
+                                .font(.system(size: 10))
+                            Text("Overload")
+                                .font(.system(size: 11.5, weight: .bold, design: .rounded))
                         }
-                        .foregroundColor(Color(white: 0.8))
-                        .frame(width: 80, height: 36)
-                        .background(Color(white: 0.15))
+                        .foregroundColor(.white)
+                        .frame(width: 88, height: 36)
+                        .background(Color(white: 0.20))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .stroke(Color(white: 0.35), lineWidth: 1)
+                        )
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     }
+                    .buttonStyle(.plain)
+
+                    Button(intent: OpenTriageIntent()) {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(Color(white: 0.8))
+                            .frame(width: 36, height: 36)
+                            .background(Color(white: 0.14))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .stroke(Color(white: 0.28), lineWidth: 1)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }

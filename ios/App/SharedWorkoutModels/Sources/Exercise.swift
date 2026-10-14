@@ -136,6 +136,18 @@ public struct Exercise: Codable, Identifiable, Hashable {
         self.maxWeight = maxWeight
     }
 
+    public var isCounterweight: Bool { isAssisted }
+
+    public var effectiveMinWeight: Double {
+        if let minW = minWeight { return minW }
+        return isAssisted ? (unit.lowercased() == "kg" ? 2.5 : 5.0) : 0.0
+    }
+
+    public var effectiveMaxWeight: Double {
+        if let maxW = maxWeight { return maxW }
+        return isAssisted ? (unit.lowercased() == "kg" ? 50.0 : 100.0) : Double.infinity
+    }
+
     enum CodingKeys: String, CodingKey {
         case id, name, split, category, equipmentType, unit, microIncrement, increment
         case repWindowMin, repWindowMax, targetSets, activeSetsCount, isCalibrated
@@ -143,6 +155,7 @@ public struct Exercise: Codable, Identifiable, Hashable {
         case consecutiveSet3Failures, consecutiveStagnations, consecutivePromotions
         case sessionsSinceRecalibration, muscleGroup, baseTareWeight, isAssisted
         case minWeight, maxWeight
+        case is_assisted, min_weight, max_weight
     }
 
     public init(from decoder: Decoder) throws {
@@ -185,8 +198,47 @@ public struct Exercise: Codable, Identifiable, Hashable {
         sessionsSinceRecalibration = try container.decodeIfPresent(Int.self, forKey: .sessionsSinceRecalibration) ?? 0
         muscleGroup = try container.decodeIfPresent(String.self, forKey: .muscleGroup) ?? "CHEST"
         baseTareWeight = try container.decodeIfPresent(Double.self, forKey: .baseTareWeight) ?? 0.0
-        isAssisted = try container.decodeIfPresent(Bool.self, forKey: .isAssisted) ?? false
-        minWeight = try container.decodeIfPresent(Double.self, forKey: .minWeight)
-        maxWeight = try container.decodeIfPresent(Double.self, forKey: .maxWeight)
+        
+        let decodedAssisted = try? container.decodeIfPresent(Bool.self, forKey: .isAssisted)
+        let decodedSnakeAssisted = try? container.decodeIfPresent(Bool.self, forKey: .is_assisted)
+        isAssisted = decodedAssisted ?? decodedSnakeAssisted ?? false
+
+        let decodedMin = try? container.decodeIfPresent(Double.self, forKey: .minWeight)
+        let decodedSnakeMin = try? container.decodeIfPresent(Double.self, forKey: .min_weight)
+        minWeight = decodedMin ?? decodedSnakeMin
+
+        let decodedMax = try? container.decodeIfPresent(Double.self, forKey: .maxWeight)
+        let decodedSnakeMax = try? container.decodeIfPresent(Double.self, forKey: .max_weight)
+        maxWeight = decodedMax ?? decodedSnakeMax
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(split, forKey: .split)
+        try container.encode(category, forKey: .category)
+        try container.encode(equipmentType, forKey: .equipmentType)
+        try container.encode(unit, forKey: .unit)
+        try container.encode(microIncrement, forKey: .microIncrement)
+        try container.encode(increment, forKey: .increment)
+        try container.encode(repWindowMin, forKey: .repWindowMin)
+        try container.encode(repWindowMax, forKey: .repWindowMax)
+        try container.encode(targetSets, forKey: .targetSets)
+        try container.encode(activeSetsCount, forKey: .activeSetsCount)
+        try container.encode(isCalibrated, forKey: .isCalibrated)
+        try container.encode(e1RM, forKey: .e1RM)
+        try container.encode(fatigueIndex, forKey: .fatigueIndex)
+        try container.encode(loads, forKey: .loads)
+        try container.encode(weight, forKey: .weight)
+        try container.encode(consecutiveSet3Failures, forKey: .consecutiveSet3Failures)
+        try container.encode(consecutiveStagnations, forKey: .consecutiveStagnations)
+        try container.encode(consecutivePromotions, forKey: .consecutivePromotions)
+        try container.encode(sessionsSinceRecalibration, forKey: .sessionsSinceRecalibration)
+        try container.encode(muscleGroup, forKey: .muscleGroup)
+        try container.encode(baseTareWeight, forKey: .baseTareWeight)
+        try container.encode(isAssisted, forKey: .isAssisted)
+        try container.encodeIfPresent(minWeight, forKey: .minWeight)
+        try container.encodeIfPresent(maxWeight, forKey: .maxWeight)
     }
 }

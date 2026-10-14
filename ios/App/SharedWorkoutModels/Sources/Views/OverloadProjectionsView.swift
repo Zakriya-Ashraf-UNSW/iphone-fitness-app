@@ -35,8 +35,8 @@ public struct OverloadProjectionsView: View {
         var points: [ProjectionDataPoint] = []
 
         let startingW1 = ex.loads.first ?? ex.weight
-        let startingW2 = ex.loads.indices.contains(1) ? ex.loads[1] : startingW1 * 0.8
-        let startingW3 = ex.loads.indices.contains(2) ? ex.loads[2] : startingW1 * 0.6
+        let startingW2 = ex.loads.indices.contains(1) ? ex.loads[1] : (ex.isAssisted ? startingW1 * 1.2 : startingW1 * 0.8)
+        let startingW3 = ex.loads.indices.contains(2) ? ex.loads[2] : (ex.isAssisted ? startingW1 * 1.4 : startingW1 * 0.6)
         let startingE1RM = ex.e1RM > 0 ? ex.e1RM : startingW1 * 1.33
         let step = ex.microIncrement
 
@@ -54,17 +54,35 @@ public struct OverloadProjectionsView: View {
 
             // Simulate weekly progression step
             let promotionChance = (Double(weeklyFrequency) * 0.5) * adherenceRate
-            if w > 0 && Double.random(in: 0...1) < promotionChance {
-                currentW3 += step
-                if currentW3 >= currentW2 { currentW2 += step }
-                if currentW2 >= currentW1 * 0.85 { currentW1 += step }
-                currentE1RM = currentW1 * 1.33
-            } else if w > 0 {
-                // Consolidation micro-gain
-                currentW1 += (step * 0.25 * Double(weeklyFrequency) * adherenceRate)
-                currentW2 = max(currentW2, currentW1 * 0.80)
-                currentW3 = max(currentW3, currentW1 * 0.60)
-                currentE1RM = currentW1 * 1.33
+            if ex.isAssisted {
+                // Counterweight progression: assistance pin drops toward machine minimum / unassisted floor
+                let minFloor = ex.effectiveMinWeight
+                if w > 0 && Double.random(in: 0...1) < promotionChance {
+                    currentW1 = max(minFloor, currentW1 - step)
+                    currentW2 = max(currentW1, currentW2 - step)
+                    currentW3 = max(currentW2, currentW3 - step)
+                } else if w > 0 {
+                    let microDrop = step * 0.25 * Double(weeklyFrequency) * adherenceRate
+                    currentW1 = max(minFloor, currentW1 - microDrop)
+                    currentW2 = max(currentW1, currentW2 - microDrop)
+                    currentW3 = max(currentW2, currentW3 - microDrop)
+                }
+            } else {
+                // Standard progression: weight increases
+                let maxCeil = ex.effectiveMaxWeight
+                let minFloor = ex.effectiveMinWeight
+                if w > 0 && Double.random(in: 0...1) < promotionChance {
+                    currentW3 = min(maxCeil, currentW3 + step)
+                    if currentW3 >= currentW2 { currentW2 = min(maxCeil, currentW2 + step) }
+                    if currentW2 >= currentW1 * 0.85 { currentW1 = min(maxCeil, currentW1 + step) }
+                    currentE1RM = currentW1 * 1.33
+                } else if w > 0 {
+                    // Consolidation micro-gain
+                    currentW1 = min(maxCeil, currentW1 + (step * 0.25 * Double(weeklyFrequency) * adherenceRate))
+                    currentW2 = min(maxCeil, max(minFloor, max(currentW2, currentW1 * 0.80)))
+                    currentW3 = min(maxCeil, max(minFloor, max(currentW3, currentW1 * 0.60)))
+                    currentE1RM = currentW1 * 1.33
+                }
             }
         }
         return points
@@ -73,11 +91,19 @@ public struct OverloadProjectionsView: View {
     private var estimatedWeeksToGoal: Int? {
         guard let ex = selectedExercise else { return nil }
         let currentW1 = ex.loads.first ?? ex.weight
-        if currentW1 >= targetGoalWeight { return 0 }
-        let remaining = targetGoalWeight - currentW1
-        let weeklyGain = (ex.microIncrement * Double(weeklyFrequency) * 0.4) * adherenceRate
-        guard weeklyGain > 0 else { return nil }
-        return max(1, Int((remaining / weeklyGain).rounded(.up)))
+        if ex.isAssisted {
+            if currentW1 <= targetGoalWeight { return 0 }
+            let remaining = currentW1 - targetGoalWeight
+            let weeklyDrop = (ex.microIncrement * Double(weeklyFrequency) * 0.4) * adherenceRate
+            guard weeklyDrop > 0 else { return nil }
+            return max(1, Int((remaining / weeklyDrop).rounded(.up)))
+        } else {
+            if currentW1 >= targetGoalWeight { return 0 }
+            let remaining = targetGoalWeight - currentW1
+            let weeklyGain = (ex.microIncrement * Double(weeklyFrequency) * 0.4) * adherenceRate
+            guard weeklyGain > 0 else { return nil }
+            return max(1, Int((remaining / weeklyGain).rounded(.up)))
+        }
     }
 
     public var body: some View {
@@ -110,7 +136,11 @@ public struct OverloadProjectionsView: View {
             .onAppear {
                 if selectedExerciseId.isEmpty, let first = manager.exercises.first {
                     selectedExerciseId = first.id
-                    targetGoalWeight = (first.loads.first ?? first.weight) + 20.0
+                    if first.isAssisted {
+                        targetGoalWeight = first.effectiveMinWeight
+                    } else {
+                        targetGoalWeight = (first.loads.first ?? first.weight) + 20.0
+                    }
                 }
             }
         }
@@ -126,7 +156,11 @@ public struct OverloadProjectionsView: View {
                     Button(action: {
                         Theme.hapticImpact(.light)
                         selectedExerciseId = ex.id
-                        targetGoalWeight = (ex.loads.first ?? ex.weight) + 20.0
+                        if ex.isAssisted {
+                            targetGoalWeight = ex.effectiveMinWeight
+                        } else {
+                            targetGoalWeight = (ex.loads.first ?? ex.weight) + 20.0
+                        }
                     }) {
                         HStack {
                             Text(ex.name)
@@ -184,16 +218,16 @@ public struct OverloadProjectionsView: View {
     private var chartCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Label("Hypertrophy Forecast Curve", systemImage: "chart.xyaxis.line")
+                Label(selectedExercise?.isAssisted == true ? "Assistance Pin Reduction Forecast" : "Hypertrophy Forecast Curve", systemImage: selectedExercise?.isAssisted == true ? "arrow.down.right.circle.fill" : "chart.xyaxis.line")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(Theme.textPrimary)
                 Spacer()
-                Text("SWIFT CHARTS 120Hz")
+                Text(selectedExercise?.isAssisted == true ? "COUNTERWEIGHT DYNAMICS" : "SWIFT CHARTS 120Hz")
                     .font(.system(size: 9, weight: .black))
-                    .foregroundColor(Theme.emerald)
+                    .foregroundColor(selectedExercise?.isAssisted == true ? Theme.purple : Theme.emerald)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Theme.emerald.opacity(0.15))
+                    .background((selectedExercise?.isAssisted == true ? Theme.purple : Theme.emerald).opacity(0.15))
                     .cornerRadius(4)
             }
 
@@ -363,12 +397,12 @@ public struct OverloadProjectionsView: View {
     private var targetGoalCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Label("Target Goal Milestone", systemImage: "flag.checkered")
+                Label(selectedExercise?.isAssisted == true ? "Bodyweight Graduation Milestone" : "Target Goal Milestone", systemImage: selectedExercise?.isAssisted == true ? "graduationcap.fill" : "flag.checkered")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(Theme.amber)
+                    .foregroundColor(selectedExercise?.isAssisted == true ? Theme.purple : Theme.amber)
                 Spacer()
                 if let weeks = estimatedWeeksToGoal {
-                    Text(weeks == 0 ? "GOAL REACHED!" : "~ \(weeks) WEEKS")
+                    Text(weeks == 0 ? "UNASSISTED GOAL REACHED!" : "~ \(weeks) WEEKS")
                         .font(.system(size: 11, weight: .black))
                         .foregroundColor(Theme.emerald)
                         .padding(.horizontal, 8)
@@ -379,16 +413,22 @@ public struct OverloadProjectionsView: View {
             }
 
             HStack {
-                Text("Target Load (\(selectedExercise?.unit.uppercased() ?? "KG"))")
+                Text(selectedExercise?.isAssisted == true ? "Target Assist Pin (\(selectedExercise?.unit.uppercased() ?? "LBS"))" : "Target Load (\(selectedExercise?.unit.uppercased() ?? "KG"))")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(Theme.textSecondary)
                 Spacer()
-                Stepper("\(String(format: "%.1f", targetGoalWeight))", value: $targetGoalWeight, in: 20...400, step: selectedExercise?.microIncrement ?? 2.5)
+                Stepper("\(String(format: "%.1f", targetGoalWeight))", value: $targetGoalWeight, in: (selectedExercise?.isAssisted == true ? 0 : 20)...400, step: selectedExercise?.microIncrement ?? 2.5)
                     .foregroundColor(Theme.textPrimary)
             }
             .padding(12)
             .background(Theme.surfaceElevated)
             .cornerRadius(10)
+
+            if selectedExercise?.isAssisted == true {
+                Text("Assistance pin reduces as relative strength improves, progressing directly toward unassisted bodyweight reps.")
+                    .font(.system(size: 11))
+                    .foregroundColor(Theme.textSecondary)
+            }
         }
         .padding(16)
         .background(Theme.surfaceCard)

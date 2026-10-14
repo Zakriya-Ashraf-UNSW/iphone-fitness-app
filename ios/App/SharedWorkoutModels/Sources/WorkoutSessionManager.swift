@@ -11,9 +11,12 @@ public final class WorkoutSessionManager: ObservableObject {
     @Published public var activeExerciseIndex: Int = 0
     @Published public var isRoutineActive: Bool = false
     @Published public var isMuted: Bool = false
+    @Published public var selectedTab: Int = 0
+    @Published public var showCustomRepsSheet: Bool = false
 
     // Chamber State
     @Published public var activeSetIndex: Int = 1
+    @Published public var isTriageMode: Bool = false
     @Published public var isWarmupMode: Bool = false
     @Published public var warmupIndex: Int = 1
     @Published public var totalWarmups: Int = 0
@@ -44,6 +47,9 @@ public final class WorkoutSessionManager: ObservableObject {
     @Published public var isTransitionRestMode: Bool = false
     @Published public var transitionRestRemaining: Int = 120
     @Published public var transitionNextExName: String = ""
+    @Published public var isEndWorkoutSummaryShowing: Bool = false
+    @Published public var sessionCompletedExercises: [SessionExerciseSummary] = []
+    @Published public var lastExerciseExtraRest: Int = 0
 
     public var currentExercise: Exercise? {
         let list = exercisesForCurrentSplit
@@ -58,6 +64,7 @@ public final class WorkoutSessionManager: ObservableObject {
     private init() {
         self.exercises = WorkoutStore.shared.loadExercises()
         startHeartbeatTimer()
+        syncLiveActivity()
     }
 
     public func reloadData() {
@@ -89,7 +96,16 @@ public final class WorkoutSessionManager: ObservableObject {
         Theme.hapticNotification(.warning)
     }
 
-    public func applyCalibration(exerciseId: String, e1RM: Double, fatigueIndex: Double, loads: [Double]) {
+    public func applyCalibration(
+        exerciseId: String,
+        e1RM: Double,
+        fatigueIndex: Double,
+        loads: [Double],
+        set1Load: Double? = nil,
+        set1Reps: Int? = nil,
+        set2Load: Double? = nil,
+        set2Reps: Int? = nil
+    ) {
         guard let idx = exercises.firstIndex(where: { $0.id == exerciseId }) else { return }
         var ex = exercises[idx]
         ex.isCalibrated = true
@@ -100,6 +116,37 @@ public final class WorkoutSessionManager: ObservableObject {
         ex.sessionsSinceRecalibration = 0
         exercises[idx] = ex
         WorkoutStore.shared.saveExercises(exercises)
+
+        let s1Load = set1Load ?? (loads.first ?? ex.weight)
+        let s1R = set1Reps ?? ex.repWindowMax
+        let s2Load = set2Load ?? (ex.isAssisted ? s1Load * 1.20 : s1Load * 0.80)
+        let s2R = set2Reps ?? max(1, ex.repWindowMin)
+        let fiPct = Int(round(fatigueIndex * 100))
+        let summary = "2-Set Calibration Complete: e1RM \(String(format: "%.1f", e1RM)) \(ex.unit.uppercased()) • Fatigue Index \(fiPct)%. Baseline: \(String(format: "%.1f", s1Load)) x \(s1R)r -> Drop: \(String(format: "%.1f", s2Load)) x \(s2R)r. Prescribed: \(loads.map { String(format: "%.1f", $0) }.joined(separator: " / ")) \(ex.unit.uppercased())."
+
+        let calibrationEntry = WorkoutHistoryEntry(
+            exerciseId: ex.id,
+            exerciseName: ex.name,
+            split: ex.split,
+            unit: ex.unit,
+            targetSets: 2,
+            loadsUsed: [s1Load, s2Load, 0.0],
+            nextLoads: loads,
+            weightUsed: s1Load,
+            nextTargetWeight: loads.first ?? ex.weight,
+            increment: ex.microIncrement,
+            set1Reps: "\(s1R)",
+            set2Reps: "\(s2R)",
+            set3Reps: "—",
+            fatigueIndex: fatigueIndex,
+            e1RM: e1RM,
+            progressionSummary: summary,
+            isAssisted: ex.isAssisted,
+            isCalibration: true,
+            entryType: "CALIBRATION"
+        )
+        WorkoutStore.shared.appendHistoryEntry(calibrationEntry)
+
         Theme.hapticNotification(.success)
         AudioManager.shared.playFanfare()
     }
@@ -148,6 +195,8 @@ public final class WorkoutSessionManager: ObservableObject {
         self.activeSetIndex = 1
         self.isRecapShowing = false
         self.isTransitionRestMode = false
+        self.isEndWorkoutSummaryShowing = false
+        self.sessionCompletedExercises = []
         Theme.hapticNotification(.success)
         initCurrentExercise()
     }
@@ -163,8 +212,11 @@ public final class WorkoutSessionManager: ObservableObject {
         }
         self.isRoutineActive = true
         self.activeSetIndex = 1
+        self.isTriageMode = false
         self.isRecapShowing = false
         self.isTransitionRestMode = false
+        self.isEndWorkoutSummaryShowing = false
+        self.sessionCompletedExercises = []
         Theme.hapticNotification(.success)
         initCurrentExercise()
     }
@@ -179,6 +231,8 @@ public final class WorkoutSessionManager: ObservableObject {
         self.s3Verdict = nil
         self.loggedReps = [0, 0, 0]
         self.activeSetIndex = 1
+        self.isTriageMode = false
+        self.lastExerciseExtraRest = 0
         self.stopRestTimer()
 
         // Check warmups
@@ -257,8 +311,27 @@ public final class WorkoutSessionManager: ObservableObject {
 
     // MARK: - Working Set Triage & Advancements
 
-    public func logSet1(outcome: String, customReps: Int? = nil) {
+    public func updateCurrentExerciseSetLoad(setIndex: Int, load: Double) {
+        guard let ex = currentExercise, let idx = exercises.firstIndex(where: { $0.id == ex.id }) else { return }
+        var updated = ex
+        while updated.loads.count <= setIndex {
+            updated.loads.append(updated.weight)
+        }
+        updated.loads[setIndex] = load
+        if setIndex == 0 {
+            updated.weight = load
+        }
+        exercises[idx] = updated
+        WorkoutStore.shared.saveExercises(exercises)
+        syncLiveActivity()
+    }
+
+    public func logSet1(outcome: String, customReps: Int? = nil, customLoad: Double? = nil) {
         guard let ex = currentExercise else { return }
+        if let l = customLoad {
+            updateCurrentExerciseSetLoad(setIndex: 0, load: l)
+        }
+        self.isTriageMode = false
         self.s1Outcome = outcome
         Theme.hapticImpact(.medium)
 
@@ -271,7 +344,9 @@ public final class WorkoutSessionManager: ObservableObject {
             case "overload":
                 repsLogged = targetReps + 1
             case "target":
-                repsLogged = targetReps
+                repsLogged = (ex.repWindowMax > ex.repWindowMin)
+                    ? (ex.repWindowMin + ex.repWindowMax) / 2
+                    : ex.repWindowMax
             default:
                 repsLogged = max(0, ex.repWindowMin - 1)
             }
@@ -287,7 +362,9 @@ public final class WorkoutSessionManager: ObservableObject {
         }
         loggedReps[0] = repsLogged
 
-        preparePrescribedRestUI(forSet: 2, autoStart: true)
+        let s1Missed = repsLogged < ex.repWindowMin
+        let extra = s1Missed ? 60 : 0
+        preparePrescribedRestUI(forSet: 2, autoStart: true, extraSeconds: extra)
         syncLiveActivity()
     }
 
@@ -296,13 +373,17 @@ public final class WorkoutSessionManager: ObservableObject {
         Theme.hapticImpact(.light)
         self.activeSetIndex = setNum
         if !restTimerRunning {
-            preparePrescribedRestUI(forSet: setNum + 1, autoStart: false)
+            preparePrescribedRestUI(forSet: min(currentExercise?.activeSetsCount ?? 3, setNum + 1), autoStart: false)
         }
         syncLiveActivity()
     }
 
-    public func logSet2(outcome: String, customReps: Int? = nil) {
+    public func logSet2(outcome: String, customReps: Int? = nil, customLoad: Double? = nil) {
         guard let ex = currentExercise else { return }
+        if let l = customLoad {
+            updateCurrentExerciseSetLoad(setIndex: 1, load: l)
+        }
+        self.isTriageMode = false
         self.s2Outcome = outcome
         Theme.hapticImpact(.medium)
 
@@ -315,7 +396,9 @@ public final class WorkoutSessionManager: ObservableObject {
             case "overload":
                 repsLogged = targetReps + 1
             case "target":
-                repsLogged = targetReps
+                repsLogged = (ex.repWindowMax > ex.repWindowMin)
+                    ? (ex.repWindowMin + ex.repWindowMax) / 2
+                    : ex.repWindowMax
             default:
                 repsLogged = max(0, ex.repWindowMin - 1)
             }
@@ -334,24 +417,47 @@ public final class WorkoutSessionManager: ObservableObject {
         if ex.activeSetsCount == 2 {
             completeExerciseAndEvaluateRecap()
         } else {
-            let resolution = DPOEngine.resolveSet3Parameters(
-                loads: ex.loads,
-                category: ex.category,
-                microIncrement: ex.microIncrement,
-                fatigueIndex: ex.fatigueIndex,
-                pacingMode: "FAST_PACED"
-            )
-            self.restTimerPrescribed = resolution.restTimerSeconds
-            self.restTimerRemaining = resolution.restTimerSeconds
+            let resolution = DPOEngine.resolveSet3Parameters(exercise: ex, pacingMode: "FAST_PACED")
+            var s3RestSec = resolution.restTimerSeconds
+            var reason = resolution.loadDroppedForFatigue ? (ex.isAssisted ? "Fatigue-Coupled +Pin Assist Added" : "Fatigue-Coupled 60% Floor Drop") : "Standard Prescribed Rest"
+
+            if repsLogged < ex.repWindowMin {
+                if ex.isAssisted {
+                    let maxW = ex.effectiveMaxWeight
+                    let s2Load = ex.loads.count > 1 ? ex.loads[1] : ex.loads[0]
+                    if (s2Load + ex.microIncrement) > maxW {
+                        s3RestSec += 45
+                        reason = "Set 2 Machine Max Assistance Ceiling (+45s Compensatory Rest)"
+                    } else {
+                        reason = "Set 2 Under Threshold (Assistance Increased)"
+                    }
+                } else {
+                    let floor2 = DPOEngine.roundToStep(ex.loads[0] * 0.80, step: ex.microIncrement)
+                    let s2Load = ex.loads.count > 1 ? ex.loads[1] : ex.loads[0]
+                    if (s2Load - ex.microIncrement) < floor2 {
+                        s3RestSec += 60
+                        reason = "Set 2 80% Floor Boundary (+60s Compensatory Rest)"
+                    } else {
+                        reason = "Set 2 Under Threshold (Load Dropped)"
+                    }
+                }
+            }
+
+            self.restTimerPrescribed = s3RestSec
+            self.restTimerRemaining = s3RestSec
             self.restTimerLabel = "REST FOR SET 3 (BASE OVERLOAD)"
-            self.restTimerReason = resolution.loadDroppedForFatigue ? "Fatigue-Coupled 60% Floor Drop" : "Standard Prescribed Rest"
-            startRestTimer(seconds: resolution.restTimerSeconds, label: restTimerLabel, reason: restTimerReason)
+            self.restTimerReason = reason
+            startRestTimer(seconds: s3RestSec, label: restTimerLabel, reason: restTimerReason)
             syncLiveActivity()
         }
     }
 
-    public func logSet3(outcome: String, customReps: Int? = nil) {
+    public func logSet3(outcome: String, customReps: Int? = nil, customLoad: Double? = nil) {
         guard let ex = currentExercise else { return }
+        if let l = customLoad {
+            updateCurrentExerciseSetLoad(setIndex: 2, load: l)
+        }
+        self.isTriageMode = false
         self.s3Outcome = outcome
         Theme.hapticImpact(.medium)
 
@@ -364,7 +470,9 @@ public final class WorkoutSessionManager: ObservableObject {
             case "overload":
                 repsLogged = targetReps + 1
             case "target":
-                repsLogged = targetReps
+                repsLogged = (ex.repWindowMax > ex.repWindowMin)
+                    ? (ex.repWindowMin + ex.repWindowMax) / 2
+                    : ex.repWindowMax
             default:
                 repsLogged = max(0, ex.repWindowMin - 1)
             }
@@ -372,7 +480,9 @@ public final class WorkoutSessionManager: ObservableObject {
 
         switch outcome {
         case "overload":
-            s3Verdict = "Verdict: Bottom cascade overload satisfied! Next cycle primed."
+            s3Verdict = ex.isAssisted
+                ? "Verdict: Base assistance volume cleared! Overload primed."
+                : "Verdict: Bottom cascade overload satisfied! Next cycle primed."
         case "target":
             s3Verdict = "Verdict: Base set volume maintained."
         default:
@@ -393,7 +503,12 @@ public final class WorkoutSessionManager: ObservableObject {
         guard var ex = currentExercise else { return }
         stopRestTimer()
 
-        let outcome: ProgressionOutcome
+        // Capture loads actually lifted in this session before mutating ex.loads
+        let usedLoads: [Double] = (0..<ex.activeSetsCount).map { i in
+            ex.loads.indices.contains(i) ? ex.loads[i] : (ex.loads.first ?? ex.weight)
+        }
+
+        var outcome: ProgressionOutcome
         let anyMissed = (loggedReps[0] < ex.repWindowMin) ||
                         (loggedReps[1] < ex.repWindowMin) ||
                         (ex.activeSetsCount == 3 && loggedReps[2] < ex.repWindowMin)
@@ -405,12 +520,17 @@ public final class WorkoutSessionManager: ObservableObject {
                 activeSetsCount: ex.activeSetsCount,
                 repMin: ex.repWindowMin,
                 microIncrement: ex.microIncrement,
-                consecutiveFailures: ex.consecutiveSet3Failures
+                consecutiveFailures: ex.consecutiveSet3Failures,
+                isAssisted: ex.isAssisted,
+                minWeight: ex.minWeight,
+                maxWeight: ex.maxWeight,
+                unit: ex.unit
             )
             ex.loads = missedResult.loads
             ex.weight = missedResult.loads.first ?? ex.weight
             ex.activeSetsCount = missedResult.activeSetsCount
             ex.consecutiveSet3Failures = missedResult.consecutiveFailures
+            self.lastExerciseExtraRest = missedResult.extraSeconds
             outcome = ProgressionOutcome(
                 loads: missedResult.loads,
                 s1Adv: false,
@@ -420,15 +540,84 @@ public final class WorkoutSessionManager: ObservableObject {
                 summary: missedResult.summary
             )
         } else {
+            self.lastExerciseExtraRest = 0
             outcome = DPOEngine.evaluateProgression(
                 loads: ex.loads,
                 reps: loggedReps,
                 activeSetsCount: ex.activeSetsCount,
                 repMax: ex.repWindowMax,
-                microIncrement: ex.microIncrement
+                microIncrement: ex.microIncrement,
+                unit: ex.unit,
+                isAssisted: ex.isAssisted,
+                minWeight: ex.minWeight,
+                maxWeight: ex.maxWeight
             )
+
+            // Gating: Only advance sets if their triage outcome was explicitly "overload"
+            if s1Outcome != "overload" {
+                outcome.s1Adv = false
+                if outcome.loads.indices.contains(0) {
+                    outcome.loads[0] = usedLoads[0]
+                }
+            }
+            if s2Outcome != "overload" {
+                outcome.s2Adv = false
+                if outcome.loads.indices.contains(1) {
+                    outcome.loads[1] = usedLoads.indices.contains(1) ? usedLoads[1] : outcome.loads[1]
+                }
+            }
+            if s3Outcome != "overload" {
+                outcome.s3Adv = false
+                if outcome.loads.indices.contains(2) {
+                    outcome.loads[2] = usedLoads.indices.contains(2) ? usedLoads[2] : outcome.loads[2]
+                }
+            }
+
+            if !outcome.s1Adv && !outcome.s2Adv && !outcome.s3Adv {
+                outcome.summary = "Working Load Consolidated (Target Window Satisfied)"
+            }
+
             ex.loads = outcome.loads
             ex.weight = outcome.loads.first ?? ex.weight
+
+            // SPEC-001 §5.5 Set 3 Re-Entry Gate evaluation for 2-set mode
+            if ex.activeSetsCount == 2 {
+                let currentSessionPerf = DPOEngine.SessionPerformanceHistory(
+                    set1Load: usedLoads[0],
+                    set1Reps: loggedReps[0],
+                    set2Load: usedLoads.indices.contains(1) ? usedLoads[1] : (usedLoads[0] * 0.8),
+                    set2Reps: loggedReps[1]
+                )
+                let priorHistory = WorkoutStore.shared.loadHistory().filter { $0.exerciseId == ex.id }
+                if let lastEntry = priorHistory.last,
+                   let prevR1 = Int(lastEntry.set1Reps),
+                   let prevR2 = Int(lastEntry.set2Reps) {
+                    let prevL1 = lastEntry.loadsUsed.indices.contains(0) ? lastEntry.loadsUsed[0] : lastEntry.weightUsed
+                    let prevL2 = lastEntry.loadsUsed.indices.contains(1) ? lastEntry.loadsUsed[1] : (prevL1 * 0.8)
+                    let prevSessionPerf = DPOEngine.SessionPerformanceHistory(
+                        set1Load: prevL1,
+                        set1Reps: prevR1,
+                        set2Load: prevL2,
+                        set2Reps: prevR2
+                    )
+                    let reentry = DPOEngine.evaluateSet3Reentry(
+                        currentW1: ex.loads[0],
+                        microIncrement: ex.microIncrement,
+                        repWindowMax: ex.repWindowMax,
+                        lastTwoSessions: [prevSessionPerf, currentSessionPerf]
+                    )
+                    if reentry.canReEnable {
+                        ex.activeSetsCount = 3
+                        if ex.loads.count >= 3 {
+                            ex.loads[2] = reentry.initialW3
+                        } else {
+                            ex.loads.append(reentry.initialW3)
+                        }
+                        outcome.loads = ex.loads
+                        outcome.summary += " • \(reentry.reason)"
+                    }
+                }
+            }
         }
 
         self.recapOutcome = outcome
@@ -439,15 +628,47 @@ public final class WorkoutSessionManager: ObservableObject {
             WorkoutStore.shared.saveExercises(exercises)
         }
 
+        // Calculate load deltas for all sets
+        let nextLoadsTarget = outcome.loads
+        var deltas: [Double] = []
+        for i in 0..<ex.activeSetsCount {
+            let used = usedLoads.indices.contains(i) ? usedLoads[i] : 0
+            let next = nextLoadsTarget.indices.contains(i) ? nextLoadsTarget[i] : used
+            deltas.append(((next - used) * 100).rounded() / 100)
+        }
+
+        let exerciseSummary = SessionExerciseSummary(
+            exerciseId: ex.id,
+            exerciseName: ex.name,
+            muscleGroup: ex.muscleGroup,
+            split: ex.split,
+            unit: ex.unit,
+            targetSets: ex.activeSetsCount,
+            loggedReps: Array(loggedReps.prefix(ex.activeSetsCount)),
+            loadsUsed: usedLoads,
+            nextLoads: nextLoadsTarget,
+            deltas: deltas,
+            progressionSummary: outcome.summary,
+            isAnchorPromoted: outcome.s1Adv,
+            isAssisted: ex.isAssisted
+        )
+
+        // Store into current session list (update if already exists or append)
+        if let existingIdx = sessionCompletedExercises.firstIndex(where: { $0.exerciseId == ex.id }) {
+            sessionCompletedExercises[existingIdx] = exerciseSummary
+        } else {
+            sessionCompletedExercises.append(exerciseSummary)
+        }
+
         let historyEntry = WorkoutHistoryEntry(
             exerciseId: ex.id,
             exerciseName: ex.name,
             split: ex.split,
             unit: ex.unit,
             targetSets: ex.activeSetsCount,
-            loadsUsed: [ex.loads[0], ex.loads.indices.contains(1) ? ex.loads[1] : 0, ex.loads.indices.contains(2) ? ex.loads[2] : 0],
+            loadsUsed: [usedLoads[0], usedLoads.indices.contains(1) ? usedLoads[1] : 0, usedLoads.indices.contains(2) ? usedLoads[2] : 0],
             nextLoads: outcome.loads,
-            weightUsed: ex.weight,
+            weightUsed: usedLoads.first ?? ex.weight,
             nextTargetWeight: outcome.loads.first ?? ex.weight,
             increment: ex.microIncrement,
             set1Reps: "\(loggedReps[0])",
@@ -455,7 +676,8 @@ public final class WorkoutSessionManager: ObservableObject {
             set3Reps: "\(loggedReps[2])",
             fatigueIndex: ex.fatigueIndex,
             e1RM: ex.e1RM,
-            progressionSummary: outcome.summary
+            progressionSummary: outcome.summary,
+            isAssisted: ex.isAssisted
         )
         WorkoutStore.shared.appendHistoryEntry(historyEntry)
 
@@ -466,6 +688,10 @@ public final class WorkoutSessionManager: ObservableObject {
         syncLiveActivity()
     }
 
+    public var isLastExerciseInCurrentRoutine: Bool {
+        activeExerciseIndex >= max(0, exercisesForCurrentSplit.count - 1)
+    }
+
     public func advanceToNextExerciseAfterRecap() {
         self.isRecapShowing = false
         let list = exercisesForCurrentSplit
@@ -473,18 +699,40 @@ public final class WorkoutSessionManager: ObservableObject {
 
         if nextIndex < list.count {
             self.isTransitionRestMode = true
-            self.transitionRestRemaining = 120
+            let baseTransition = 120
+            let totalTransition = baseTransition + lastExerciseExtraRest
+            self.transitionRestRemaining = totalTransition
             self.transitionNextExName = list[nextIndex].name
-            startRestTimer(seconds: 120, label: "TRANSITION TO \(list[nextIndex].name.uppercased())", reason: "Inter-Exercise Recovery")
+            let reason = lastExerciseExtraRest > 0 ? "120s Transition + \(lastExerciseExtraRest)s Compensatory Rest" : "Inter-Exercise Recovery"
+            startRestTimer(seconds: totalTransition, label: "TRANSITION TO \(list[nextIndex].name.uppercased())", reason: reason)
             syncLiveActivity()
         } else {
-            self.isRoutineActive = false
-            self.isTransitionRestMode = false
-            Theme.hapticNotification(.success)
-            AudioManager.shared.playFanfare()
-            if #available(iOS 16.1, *) {
-                LiveActivityManager.shared.endActivity()
-            }
+            finishWorkoutAndShowSummary()
+        }
+    }
+
+    public func finishWorkoutAndShowSummary() {
+        self.isRecapShowing = false
+        self.isTransitionRestMode = false
+        self.stopRestTimer()
+        self.isEndWorkoutSummaryShowing = true
+        Theme.hapticNotification(.success)
+        AudioManager.shared.playFanfare()
+        if #available(iOS 16.1, *) {
+            LiveActivityManager.shared.endActivity()
+        }
+    }
+
+    public func dismissEndWorkoutSummary() {
+        self.isRoutineActive = false
+        self.isEndWorkoutSummaryShowing = false
+        self.isRecapShowing = false
+        self.isTransitionRestMode = false
+        self.activeExerciseIndex = 0
+        self.activeSetIndex = 1
+        self.stopRestTimer()
+        if #available(iOS 16.1, *) {
+            LiveActivityManager.shared.endActivity()
         }
     }
 
@@ -501,17 +749,18 @@ public final class WorkoutSessionManager: ObservableObject {
 
     // MARK: - Rest Timer & Heartbeat
 
-    private func preparePrescribedRestUI(forSet targetSet: Int, autoStart: Bool) {
+    private func preparePrescribedRestUI(forSet targetSet: Int, autoStart: Bool, extraSeconds: Int = 0) {
         guard let ex = currentExercise else { return }
-        let limits = DPOEngine.restLimits[ex.category] ?? RestLimit(min: 90, defaultSec: 120, max: 150)
-        let restSec = (targetSet == 2) ? limits.defaultSeconds : limits.minSeconds
-        self.restTimerPrescribed = restSec
-        self.restTimerRemaining = restSec
+        let limits = DPOEngine.restLimits[ex.category] ?? RestLimit(min: 75, defaultSec: 90, max: 120)
+        let baseRestSec = (targetSet == 2) ? limits.defaultSeconds : limits.minSeconds
+        let totalRestSec = baseRestSec + extraSeconds
+        self.restTimerPrescribed = totalRestSec
+        self.restTimerRemaining = totalRestSec
         self.restTimerLabel = "REST FOR SET \(targetSet)"
-        self.restTimerReason = "\(restSec)s Prescribed Rest"
+        self.restTimerReason = extraSeconds > 0 ? "\(baseRestSec)s Prescribed + \(extraSeconds)s Compensatory Rest" : "\(totalRestSec)s Prescribed Rest"
 
         if autoStart {
-            startRestTimer(seconds: restSec, label: restTimerLabel, reason: restTimerReason)
+            startRestTimer(seconds: totalRestSec, label: restTimerLabel, reason: restTimerReason)
         } else {
             stopRestTimer()
         }
@@ -528,9 +777,31 @@ public final class WorkoutSessionManager: ObservableObject {
         syncLiveActivity()
     }
 
-    public func stopRestTimer() {
+    public func completeCurrentRestAndAdvance() {
+        guard restTimerRunning else {
+            self.restEndTime = nil
+            return
+        }
         self.restTimerRunning = false
         self.restEndTime = nil
+
+        if isTransitionRestMode {
+            skipTransitionRest()
+        } else if isWarmupMode {
+            advanceWarmup()
+        } else {
+            self.isTriageMode = false
+            if restTimerLabel.contains("SET 2") && activeSetIndex == 1 {
+                activeSetIndex = 2
+            } else if restTimerLabel.contains("SET 3") && activeSetIndex == 2 {
+                activeSetIndex = 3
+            }
+            syncLiveActivity()
+        }
+    }
+
+    public func stopRestTimer() {
+        completeCurrentRestAndAdvance()
     }
 
     public func adjustRest(by seconds: Int) {
@@ -559,12 +830,7 @@ public final class WorkoutSessionManager: ObservableObject {
             self.restEndTime = nil
             Theme.hapticSuccess()
             AudioManager.shared.playTimerComplete()
-
-            if isTransitionRestMode {
-                skipTransitionRest()
-            } else if isWarmupMode {
-                advanceWarmup()
-            }
+            completeCurrentRestAndAdvance()
         } else {
             self.restTimerRemaining = remaining
             // Countdown sensory feedback on last 5 seconds
@@ -583,37 +849,58 @@ public final class WorkoutSessionManager: ObservableObject {
         guard #available(iOS 16.1, *) else { return }
         guard let ex = currentExercise else { return }
 
-        let load = ex.loads.indices.contains(activeSetIndex - 1) ? ex.loads[activeSetIndex - 1] : ex.weight
-        let loadText = "\(load) \(ex.unit.uppercased())"
+        // If resting, determine the upcoming set being prepared for
+        let displaySetIndex: Int
+        if restTimerRunning && restTimerLabel.contains("SET 2") {
+            displaySetIndex = 2
+        } else if restTimerRunning && restTimerLabel.contains("SET 3") {
+            displaySetIndex = 3
+        } else {
+            displaySetIndex = activeSetIndex
+        }
+
+        let loadIdx = max(0, min(displaySetIndex - 1, ex.loads.count - 1))
+        let load = ex.loads.indices.contains(loadIdx) ? ex.loads[loadIdx] : ex.weight
+        let loadText = ex.isAssisted
+            ? String(format: "%.1f %@ Assist", load, ex.unit.uppercased())
+            : String(format: "%.1f %@", load, ex.unit.uppercased())
         let targetRepsText = "\(ex.repWindowMin)–\(ex.repWindowMax) Reps"
+
+        let nextLoadIdx = min(displaySetIndex, ex.loads.count - 1)
+        let nextLoad = ex.loads.indices.contains(nextLoadIdx) ? ex.loads[nextLoadIdx] : load
+        let nextSetLoadText = ex.isAssisted
+            ? String(format: "%.1f %@ Assist", nextLoad, ex.unit.uppercased())
+            : String(format: "%.1f %@", nextLoad, ex.unit.uppercased())
 
         let restEnd = restTimerRunning ? restEndTime?.timeIntervalSince1970 : nil
 
         let contentState = WorkoutActivityAttributes.ContentState(
-            splitName: currentSplit.rawValue,
+            splitName: currentSplit.rawValue.uppercased(),
             exerciseName: ex.name,
-            setIndex: activeSetIndex,
+            setIndex: displaySetIndex,
             totalSets: ex.activeSetsCount,
             loadText: loadText,
             targetRepsText: targetRepsText,
             isResting: restTimerRunning,
             restEndTimestamp: restEnd,
-            isTriageLogging: (activeSetIndex == 1 && s1Outcome == nil) || (activeSetIndex == 2 && s2Outcome == nil) || (activeSetIndex == 3 && s3Outcome == nil),
-            underTargetText: "< \(ex.repWindowMin) Missed",
+            isTriageLogging: isTriageMode && !restTimerRunning && !isRecapShowing && !isTransitionRestMode && !isWarmupMode,
+            underTargetText: ex.isAssisted ? "< \(ex.repWindowMin) (More Help)" : "< \(ex.repWindowMin) Missed",
             prescribedTargetText: "\(ex.repWindowMin)–\(ex.repWindowMax) Target",
             overloadTargetText: "\(ex.repWindowMax + 1)+ Overload",
-            overloadIncrementText: "+\(ex.microIncrement) \(ex.unit)",
+            overloadIncrementText: ex.isAssisted ? "-1 Pin Assist (-\(ex.microIncrement) \(ex.unit))" : "+\(ex.microIncrement) \(ex.unit)",
             isRecap: isRecapShowing,
             recapLoggedSetsText: "S1: \(loggedReps[0])r • S2: \(loggedReps[1])r • S3: \(loggedReps[2])r",
             recapProgressionHeadline: recapOutcome?.summary ?? "WORKING LOAD CONSOLIDATED",
-            recapNextTargetText: "Next Anchor: \(recapOutcome?.loads.first ?? ex.weight) \(ex.unit)",
+            recapNextTargetText: "Next Anchor: \(recapOutcome?.loads.first ?? ex.weight) \(ex.unit)\(ex.isAssisted ? " Assist" : "")",
             recapIsFinalExercise: activeExerciseIndex >= exercisesForCurrentSplit.count - 1,
             isWarmup: isWarmupMode,
             warmupIndex: warmupIndex,
             totalWarmups: totalWarmups,
-            warmupTargetText: warmupPrescription?.warmups.indices.contains(warmupIndex - 1) == true ? "\(warmupPrescription!.warmups[warmupIndex - 1].targetReps) reps @ \(warmupPrescription!.warmups[warmupIndex - 1].load) \(ex.unit)" : "",
+            warmupTargetText: warmupPrescription?.warmups.indices.contains(warmupIndex - 1) == true ? "\(warmupPrescription!.warmups[warmupIndex - 1].targetReps) reps @ \(warmupPrescription!.warmups[warmupIndex - 1].load) \(ex.unit)\(ex.isAssisted ? " Assist" : "")" : "",
             isTransitionRest: isTransitionRestMode,
-            nextExerciseName: transitionNextExName
+            nextExerciseName: transitionNextExName,
+            restTimerLabel: restTimerLabel,
+            nextSetLoadText: nextSetLoadText
         )
 
         LiveActivityManager.shared.syncWorkoutState(contentState)

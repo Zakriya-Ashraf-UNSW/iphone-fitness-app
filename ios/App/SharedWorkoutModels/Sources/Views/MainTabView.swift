@@ -16,7 +16,7 @@ public struct MainTabView: View {
     }
 
     public var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: $manager.selectedTab) {
             // Tab 0: Focused Workout Chamber
             WorkoutChamberView(manager: manager)
                 .tabItem {
@@ -25,7 +25,7 @@ public struct MainTabView: View {
                 .tag(0)
 
             // Tab 1: PPL Lifts Hub
-            ExerciseHubView(manager: manager, selectedTab: $selectedTab)
+            ExerciseHubView(manager: manager, selectedTab: $manager.selectedTab)
                 .tabItem {
                     Label("Lifts", systemImage: "dumbbell.fill")
                 }

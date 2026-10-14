@@ -29,6 +29,8 @@ public struct WorkoutActivityAttributes: ActivityAttributes {
         public var warmupTargetText: String      // e.g. "10 reps @ 60.0 KG (50% Prep)"
         public var isTransitionRest: Bool        // true during automatic inter-exercise rest countdown
         public var nextExerciseName: String      // e.g. "Incline Dumbbell Press"
+        public var restTimerLabel: String        // e.g. "REST FOR SET 2"
+        public var nextSetLoadText: String       // e.g. "67.5 KG"
 
         public init(
             splitName: String = "PUSH",
@@ -54,7 +56,9 @@ public struct WorkoutActivityAttributes: ActivityAttributes {
             totalWarmups: Int = 0,
             warmupTargetText: String = "",
             isTransitionRest: Bool = false,
-            nextExerciseName: String = ""
+            nextExerciseName: String = "",
+            restTimerLabel: String = "",
+            nextSetLoadText: String = ""
         ) {
             self.splitName = splitName
             self.exerciseName = exerciseName
@@ -80,6 +84,8 @@ public struct WorkoutActivityAttributes: ActivityAttributes {
             self.warmupTargetText = warmupTargetText
             self.isTransitionRest = isTransitionRest
             self.nextExerciseName = nextExerciseName
+            self.restTimerLabel = restTimerLabel
+            self.nextSetLoadText = nextSetLoadText
         }
     }
 

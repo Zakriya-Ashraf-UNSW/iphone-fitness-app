@@ -127,6 +127,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 manager.skipWarmups()
             case "continue-next-exercise":
                 manager.advanceToNextExerciseAfterRecap()
+            case "open-triage":
+                manager.isTriageMode = true
+                manager.syncLiveActivity()
+            case "enter-exact":
+                manager.selectedTab = 0
+                manager.showCustomRepsSheet = true
+                manager.isTriageMode = true
             default:
                 logger.warning("Unhandled action: \(action)")
             }

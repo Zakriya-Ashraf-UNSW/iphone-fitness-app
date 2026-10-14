@@ -1,13 +1,24 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-public struct BackupFileDocument: Transferable {
+public struct BackupFileDocument: FileDocument {
+    public static var readableContentTypes: [UTType] { [.json] }
     public var data: Data
 
-    public static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(exportedContentType: .json) { doc in
-            doc.data
+    public init(data: Data = Data()) {
+        self.data = data
+    }
+
+    public init(configuration: ReadConfiguration) throws {
+        if let d = configuration.file.regularFileContents {
+            self.data = d
+        } else {
+            self.data = Data()
         }
+    }
+
+    public func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        return FileWrapper(regularFileWithContents: data)
     }
 }
 
@@ -16,6 +27,9 @@ public struct DataBackupSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var showImporter: Bool = false
+    @State private var showExporter: Bool = false
+    @State private var showPasteSheet: Bool = false
+    @State private var pastedJSONText: String = ""
     @State private var alertMessage: String = ""
     @State private var showAlert: Bool = false
     @State private var showConfirmResetDefaults: Bool = false
@@ -31,7 +45,27 @@ public struct DataBackupSheet: View {
     }
 
     private var exportString: String {
-        String(data: exportPayloadData, encoding: .utf8) ?? "{}"
+        WorkoutStore.shared.exportBackupString()
+    }
+
+    private var exportFilename: String {
+        WorkoutStore.shared.getStandardBackupFilename()
+    }
+
+    private var exportFileURL: URL? {
+        WorkoutStore.shared.createTemporaryBackupFile()
+    }
+
+    private var calibratedCount: Int {
+        manager.exercises.filter { $0.isCalibrated }.count
+    }
+
+    private var assistedCount: Int {
+        manager.exercises.filter { $0.isAssisted }.count
+    }
+
+    private var historyCount: Int {
+        WorkoutStore.shared.loadHistory().count
     }
 
     public var body: some View {
@@ -41,10 +75,10 @@ public struct DataBackupSheet: View {
                     // Telemetry Card
                     telemetryCard
 
-                    // Native Export & Share
+                    // File Export & Sharing Section
                     exportSection
 
-                    // Import Section
+                    // File Import & Sync Section
                     importSection
 
                     // Settings & Audio
@@ -56,7 +90,7 @@ public struct DataBackupSheet: View {
                 .padding(16)
             }
             .background(Theme.background.ignoresSafeArea())
-            .navigationTitle("Data & Settings")
+            .navigationTitle("Sync & Data Transfer")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -65,12 +99,33 @@ public struct DataBackupSheet: View {
                         .font(.system(size: 15, weight: .bold))
                 }
             }
+            // Native File Exporter
+            .fileExporter(
+                isPresented: $showExporter,
+                document: BackupFileDocument(data: exportPayloadData),
+                contentType: .json,
+                defaultFilename: exportFilename
+            ) { result in
+                switch result {
+                case .success(let url):
+                    Theme.hapticSuccess()
+                    alertMessage = "Backup file successfully saved to:\n\(url.lastPathComponent)"
+                    showAlert = true
+                case .failure(let error):
+                    alertMessage = "Export failed: \(error.localizedDescription)"
+                    showAlert = true
+                }
+            }
+            // Native File Importer
             .fileImporter(
                 isPresented: $showImporter,
                 allowedContentTypes: [.json],
                 allowsMultipleSelection: false
             ) { result in
                 handleFileImport(result)
+            }
+            .sheet(isPresented: $showPasteSheet) {
+                pasteRestoreSheet
             }
             .alert(alertMessage, isPresented: $showAlert) {
                 Button("OK", role: .cancel) {}
@@ -117,7 +172,7 @@ public struct DataBackupSheet: View {
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(Theme.emerald)
                 Spacer()
-                Text("LOCAL APP GROUP")
+                Text("LOCAL & APP GROUP")
                     .font(.system(size: 9, weight: .black))
                     .foregroundColor(Theme.sky)
                     .padding(.horizontal, 6)
@@ -126,10 +181,21 @@ public struct DataBackupSheet: View {
                     .cornerRadius(4)
             }
 
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 dataBox(title: "EXERCISES", value: "\(manager.exercises.count)", color: Theme.textPrimary)
-                dataBox(title: "HISTORY LOGS", value: "\(WorkoutStore.shared.loadHistory().count)", color: Theme.sky)
-                dataBox(title: "PAYLOAD SIZE", value: "\(exportPayloadData.count / 1024) KB", color: Theme.amber)
+                dataBox(title: "CALIBRATED", value: "\(calibratedCount)", color: Theme.emerald)
+                dataBox(title: "ASSISTED", value: "\(assistedCount)", color: Theme.purple)
+                dataBox(title: "LOGS", value: "\(historyCount)", color: Theme.sky)
+            }
+
+            HStack {
+                Text("Complete state: e1RM, FI, loads, counterweight stack limits & history")
+                    .font(.system(size: 10))
+                    .foregroundColor(Theme.textSecondary)
+                Spacer()
+                Text("\(max(1, exportPayloadData.count / 1024)) KB")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(Theme.amber)
             }
         }
         .padding(16)
@@ -141,11 +207,12 @@ public struct DataBackupSheet: View {
     private func dataBox(title: String, value: String, color: Color) -> some View {
         VStack(spacing: 3) {
             Text(value)
-                .font(.system(size: 18, weight: .black, design: .rounded))
+                .font(.system(size: 16, weight: .black, design: .rounded))
                 .foregroundColor(color)
             Text(title)
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 8, weight: .bold))
                 .foregroundColor(Theme.textSecondary)
+                .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
@@ -154,25 +221,38 @@ public struct DataBackupSheet: View {
     }
 
     private var exportSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("Export & Cloud Sharing", systemImage: "square.and.arrow.up.fill")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(Theme.textPrimary)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Label("Save & Export File", systemImage: "square.and.arrow.up.fill")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                Spacer()
+                Text("JSON DOCUMENT")
+                    .font(.system(size: 8, weight: .black))
+                    .foregroundColor(Theme.emerald)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(Theme.emerald.opacity(0.15))
+                    .cornerRadius(4)
+            }
 
-            Text("Export complete workout database as JSON via AirDrop, iCloud Drive, Files, or Notes.")
+            Text("Saves all exercises, calibrations (e1RM, Fatigue Index, counterweight pin limits), and workout logs into a single syncable file.")
                 .font(.system(size: 12))
                 .foregroundColor(Theme.textSecondary)
+                .lineSpacing(2)
 
-            HStack(spacing: 10) {
-                ShareLink(
-                    item: exportString,
-                    preview: SharePreview("Overload_DPO_Backup.json", image: Image(systemName: "dumbbell.fill"))
-                ) {
-                    HStack {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("Export JSON via Share Sheet")
+            VStack(spacing: 10) {
+                // 1. Direct Save to Files App / iCloud
+                Button(action: {
+                    showExporter = true
+                    Theme.hapticImpact(.medium)
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "folder.badge.plus")
+                            .font(.system(size: 14, weight: .bold))
+                        Text("Save to Files App / iCloud Drive")
+                            .font(.system(size: 13, weight: .bold))
                     }
-                    .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
@@ -180,20 +260,68 @@ public struct DataBackupSheet: View {
                     .cornerRadius(10)
                 }
 
-                Button(action: {
-                    #if canImport(UIKit)
-                    UIPasteboard.general.string = exportString
-                    Theme.hapticSuccess()
-                    alertMessage = "JSON dataset copied to clipboard."
-                    showAlert = true
-                    #endif
-                }) {
-                    Image(systemName: "doc.on.doc.fill")
-                        .font(.system(size: 14, weight: .bold))
+                // 2. ShareLink with real File URL for AirDrop / Mail / Notes / Messages
+                if let fileURL = exportFileURL {
+                    ShareLink(
+                        item: fileURL,
+                        preview: SharePreview(exportFilename, image: Image(systemName: "doc.text.fill"))
+                    ) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "airplayaudio")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text("AirDrop & Share File via ShareSheet")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
                         .foregroundColor(Theme.textPrimary)
-                        .frame(width: 44, height: 44)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 42)
                         .background(Theme.surfaceElevated)
                         .cornerRadius(10)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.border, lineWidth: 1))
+                    }
+                }
+
+                HStack(spacing: 10) {
+                    // 3. Save to app Documents folder
+                    Button(action: {
+                        if let savedURL = WorkoutStore.shared.saveBackupToDocumentsDirectory() {
+                            Theme.hapticSuccess()
+                            alertMessage = "File saved directly into app's Documents folder:\n\(savedURL.lastPathComponent)\n\nAccessible via the iOS Files app under 'On My iPhone' -> 'Overload'."
+                            showAlert = true
+                        }
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "internaldrive.fill")
+                            Text("Save Locally")
+                        }
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(Theme.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 38)
+                        .background(Theme.surfaceElevated)
+                        .cornerRadius(8)
+                    }
+
+                    // 4. Copy JSON string to clipboard
+                    Button(action: {
+                        #if canImport(UIKit)
+                        UIPasteboard.general.string = exportString
+                        Theme.hapticSuccess()
+                        alertMessage = "JSON dataset copied to clipboard for quick paste transfer."
+                        showAlert = true
+                        #endif
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "doc.on.doc.fill")
+                            Text("Copy JSON")
+                        }
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(Theme.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 38)
+                        .background(Theme.surfaceElevated)
+                        .cornerRadius(8)
+                    }
                 }
             }
         }
@@ -204,28 +332,54 @@ public struct DataBackupSheet: View {
     }
 
     private var importSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("Import Database", systemImage: "square.and.arrow.down.fill")
+        VStack(alignment: .leading, spacing: 14) {
+            Label("Restore & Sync Data", systemImage: "square.and.arrow.down.fill")
                 .font(.system(size: 14, weight: .bold))
                 .foregroundColor(Theme.textPrimary)
 
-            Text("Restore exercises and workout history from an exported Overload JSON file.")
+            Text("Import a previously exported backup file or sync from another device. Replaces routine calibrations and appends session logs.")
                 .font(.system(size: 12))
                 .foregroundColor(Theme.textSecondary)
 
-            Button(action: {
-                showImporter = true
-            }) {
-                HStack {
-                    Image(systemName: "folder.fill")
-                    Text("Select JSON File from Files App")
+            HStack(spacing: 10) {
+                Button(action: {
+                    showImporter = true
+                    Theme.hapticImpact(.medium)
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder.fill")
+                        Text("Select JSON File")
+                    }
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 42)
+                    .background(Theme.surfaceElevated)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.border, lineWidth: 1))
                 }
-                .font(.system(size: 13, weight: .bold))
-                .foregroundColor(Theme.textPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-                .background(Theme.surfaceElevated)
-                .cornerRadius(10)
+
+                Button(action: {
+                    #if canImport(UIKit)
+                    if let clip = UIPasteboard.general.string, !clip.isEmpty {
+                        pastedJSONText = clip
+                    }
+                    #endif
+                    showPasteSheet = true
+                    Theme.hapticImpact(.light)
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "text.badge.plus")
+                        Text("Paste JSON")
+                    }
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(Theme.emerald)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 42)
+                    .background(Theme.surfaceElevated)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.emerald.opacity(0.4), lineWidth: 1))
+                }
             }
         }
         .padding(16)
@@ -307,6 +461,62 @@ public struct DataBackupSheet: View {
         .cornerRadius(8)
     }
 
+    private var pasteRestoreSheet: some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                Text("Paste the full JSON payload exported from another device or web app to sync all calibrations and history.")
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.textSecondary)
+                    .padding(.horizontal)
+
+                TextEditor(text: $pastedJSONText)
+                    .font(.system(size: 12, design: .monospaced))
+                    .padding(8)
+                    .background(Theme.surfaceElevated)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.border, lineWidth: 1))
+                    .padding(.horizontal)
+
+                Button(action: {
+                    if let data = pastedJSONText.data(using: .utf8) {
+                        let result = WorkoutStore.shared.importBackupPayload(data)
+                        if result.success {
+                            manager.reloadData()
+                            Theme.hapticSuccess()
+                            showPasteSheet = false
+                            alertMessage = result.message
+                            showAlert = true
+                        } else {
+                            alertMessage = result.message
+                            showAlert = true
+                        }
+                    }
+                }) {
+                    Text("Parse & Restore Data")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(pastedJSONText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Theme.textMuted : Theme.emerald)
+                        .cornerRadius(10)
+                }
+                .disabled(pastedJSONText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .padding(.horizontal)
+                .padding(.bottom, 16)
+            }
+            .padding(.top, 16)
+            .background(Theme.background.ignoresSafeArea())
+            .navigationTitle("Paste JSON Backup")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showPasteSheet = false }
+                        .foregroundColor(Theme.textSecondary)
+                }
+            }
+        }
+    }
+
     private func handleFileImport(_ result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
@@ -318,14 +528,19 @@ public struct DataBackupSheet: View {
             }
             defer { selectedURL.stopAccessingSecurityScopedResource() }
 
-            if let data = try? Data(contentsOf: selectedURL),
-               WorkoutStore.shared.importBackupPayload(data) {
-                manager.reloadData()
-                Theme.hapticSuccess()
-                alertMessage = "Database successfully restored from JSON file."
-                showAlert = true
+            if let data = try? Data(contentsOf: selectedURL) {
+                let importResult = WorkoutStore.shared.importBackupPayload(data)
+                if importResult.success {
+                    manager.reloadData()
+                    Theme.hapticSuccess()
+                    alertMessage = importResult.message
+                    showAlert = true
+                } else {
+                    alertMessage = importResult.message
+                    showAlert = true
+                }
             } else {
-                alertMessage = "Invalid backup format or corrupt JSON file."
+                alertMessage = "Failed to read the file contents."
                 showAlert = true
             }
         case .failure(let error):
